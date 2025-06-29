@@ -1,0 +1,33 @@
+.logo {
+  height: 130px;
+  width: 100px;
+}
+
+.navbar {
+  padding-left: 70px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 110px;
+}
+.nav-links {
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+  list-style: none;
+}
+
+.nav-item {
+  text-decoration: none !important;
+  color: #4f772d;
+  padding: 15px;
+  border-radius: 1rem;
+  font-family: "Figtree", sans-serif;
+  font-weight: 900;
+}
+
+.nav-item:hover {
+  background-color: #132a13;
+  color: #ecf39e;
+}
