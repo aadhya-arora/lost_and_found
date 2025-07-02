@@ -226,3 +226,189 @@
   font-size: 14px;
   color: #333;
 }
+
+.faq-section {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.faq-section h2 {
+  font-size: 36px;
+  color: #132a13;
+  margin-bottom: 40px;
+  font-family: "Figtree", sans-serif;
+}
+
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.faq-item {
+  background-color: #f6fff8;
+  border-radius: 1rem;
+  padding: 15px 20px;
+  width: 80%;
+  max-width: 500px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-5px);
+}
+
+.faq-item p {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  text-align: left;
+}
+
+.view-more {
+  margin-top: 25px;
+  font-size: 16px;
+  color: #4f772d;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: underline;
+}
+
+.view-more:hover {
+  color: #132a13;
+}
+
+.categories-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.category-heading {
+  color: #132a13;
+  font-family: "Figtree", sans-serif;
+  font-size: 50px;
+}
+.category {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+}
+.electronics-card,
+.bags-card,
+.documents-card,
+.accessory-card,
+.stationary-card {
+  width: 220px;
+  height: 200px;
+  perspective: 1000px;
+}
+.electronic-inner,
+.bags-inner,
+.documents-inner,
+.accessory-inner,
+.stationary-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s ease-in-out;
+}
+.electronics-card:hover .electronic-inner,
+.bags-card:hover .bags-inner,
+.documents-card:hover .documents-inner,
+.accessory-card:hover .accessory-inner,
+.stationary-card:hover .stationary-inner {
+  transform: rotateY(180deg);
+}
+.electronic-front,
+.electronic-back,
+.bags-front,
+.bags-back,
+.documents-front,
+.documents-back,
+.accessory-front,
+.accessory-back,
+.stationary-front,
+.stationary-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Montserrat", sans-serif;
+  font-size: 18px;
+  box-sizing: border-box;
+}
+.electronic-front {
+  background-image: url("../assets/electronics.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.bags-front {
+  background-image: url("../assets/wallet.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.documents-front {
+  background-image: url("../assets/docs.jpeg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.accessory-front {
+  background-image: url("../assets/accessories.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.stationary-front {
+  background-image: url("../assets/stationary.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.electronic-back,
+.bags-back,
+.documents-back,
+.accessory-back,
+.stationary-back {
+  background-color: #90a955;
+  color: #333;
+  transform: rotateY(180deg); /* Important! */
+}
+
+.electronic-info,
+.bags-info,
+.documents-info,
+.accessory-info,
+.stationary-info {
+  font-family: "Figtree", sans-serif;
+  font-size: 30px;
+  color: #f6fff8;
+  font-weight: 800;
+  line-height: 1.6;
+}
+
+.tip p {
+  font-family: "Figtree", sans-serif;
+}

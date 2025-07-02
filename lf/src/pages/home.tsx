@@ -1,8 +1,13 @@
 import "../styling/home.css";
+import { useState } from "react";
 import { FaRegEdit, FaBell, FaHandshake } from "react-icons/fa";
 import { FaShieldAlt, FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
+import { FaQuestionCircle } from "react-icons/fa";
 import logo from "../assets/logo.png";
+import Footer from "../components/footer";
 const Home = () => {
+  const [showMoreFAQs, setShowMoreFAQs] = useState(false);
+
   const posts = [
     {
       id: 1,
@@ -62,6 +67,51 @@ const Home = () => {
           </div>
         </div>
       </div>
+      <div className="categories-section">
+        <h2 className="category-heading">Search by Category</h2>
+        <div className="category">
+          <div className="electronics-card">
+            <div className="electronic-inner">
+              <div className="electronic-front"></div>
+              <div className="electronic-back">
+                <p className="electronic-info">Electronics</p>
+              </div>
+            </div>
+          </div>
+          <div className="bags-card">
+            <div className="bags-inner">
+              <div className="bags-front"></div>
+              <div className="bags-back">
+                <p className="bags-info">Bags & Wallet</p>
+              </div>
+            </div>
+          </div>
+          <div className="stationary-card">
+            <div className="stationary-inner">
+              <div className="stationary-front"></div>
+              <div className="stationary-back">
+                <p className="stationary-info">Stationary</p>
+              </div>
+            </div>
+          </div>
+          <div className="documents-card">
+            <div className="documents-inner">
+              <div className="documents-front"></div>
+              <div className="documents-back">
+                <p className="documents-info">Documents</p>
+              </div>
+            </div>
+          </div>
+          <div className="accessory-card">
+            <div className="accessory-inner">
+              <div className="accessory-front"></div>
+              <div className="accessory-back">
+                <p className="accessory-info">Accessories</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="latest-posts-section">
         <h2>Latest Lost and Found</h2>
         <div className="posts-grid">
@@ -95,6 +145,48 @@ const Home = () => {
           </div>
         </div>
       </div>
+
+      <div className="faq-section">
+        <h2>Frequently Asked Questions</h2>
+        <div className="faq-list">
+          <div className="faq-item">
+            <FaQuestionCircle size={30} color="#4f772d" />
+            <p>How do I post a found item?</p>
+          </div>
+          <div className="faq-item">
+            <FaQuestionCircle size={30} color="#4f772d" />
+            <p>What happens after I report a lost item?</p>
+          </div>
+          <div className="faq-item">
+            <FaQuestionCircle size={30} color="#4f772d" />
+            <p>Is it free to use?</p>
+          </div>
+
+          {showMoreFAQs && (
+            <>
+              <div className="faq-item">
+                <FaQuestionCircle size={30} color="#4f772d" />
+                <p>How can I contact the finder safely?</p>
+              </div>
+              <div className="faq-item">
+                <FaQuestionCircle size={30} color="#4f772d" />
+                <p>Can I edit or delete my post later?</p>
+              </div>
+              <div className="faq-item">
+                <FaQuestionCircle size={30} color="#4f772d" />
+                <p>Do I need to create an account to post?</p>
+              </div>
+            </>
+          )}
+        </div>
+        <button
+          className="view-more"
+          onClick={() => setShowMoreFAQs(!showMoreFAQs)}
+        >
+          {showMoreFAQs ? "Show less ←" : "View all FAQs →"}
+        </button>
+      </div>
+      <Footer />
     </div>
   );
 };
