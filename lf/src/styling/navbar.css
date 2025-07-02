@@ -1,6 +1,9 @@
 .logo {
-  height: 130px;
-  width: 100px;
+  /* height: 150px;
+  width: 150px; */
+  font-size: 50px;
+  color: #90a955;
+  font-family: "Smooch", sans-serif;
 }
 
 .navbar {
@@ -20,7 +23,7 @@
 
 .nav-item {
   text-decoration: none !important;
-  color: #4f772d;
+  color: #90a955;
   padding: 15px;
   border-radius: 1rem;
   font-family: "Figtree", sans-serif;
@@ -30,4 +33,13 @@
 .nav-item:hover {
   background-color: #132a13;
   color: #ecf39e;
+}
+
+.profile {
+  color: #90a955;
+  cursor: pointer;
+}
+
+.profile:hover {
+  color: #132a13;
 }

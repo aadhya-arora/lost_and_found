@@ -1,10 +1,11 @@
-import logo from "../assets/logo.png";
+// import logo from "../assets/main.png";
 import { FaUserCircle } from "react-icons/fa";
 import "../styling/navbar.css";
 const Navbar = () => {
   return (
     <nav className="navbar">
-      <img src={logo} alt="Logo" className="logo" />
+      {/* <img src={logo} alt="Logo" className="logo" /> */}
+      <h1 className="logo">Findify</h1>
       <ul className="nav-links">
         <li>
           <a href="/" className="nav-item">
@@ -27,7 +28,7 @@ const Navbar = () => {
           </a>
         </li>
       </ul>
-      <FaUserCircle size={40} color="#31572c" />
+      <FaUserCircle size={40} className="profile" />
     </nav>
   );
 };
