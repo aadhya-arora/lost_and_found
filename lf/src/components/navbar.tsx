@@ -4,7 +4,6 @@ import "../styling/navbar.css";
 const Navbar = () => {
   return (
     <nav className="navbar">
-      {/* <img src={logo} alt="Logo" className="logo" /> */}
       <h1 className="logo">Findify</h1>
       <ul className="nav-links">
         <li>
@@ -20,6 +19,11 @@ const Navbar = () => {
         <li>
           <a href="/found" className="nav-item">
             Found Items
+          </a>
+        </li>
+        <li>
+          <a href="/faq" className="nav-item">
+            FAQ
           </a>
         </li>
         <li>
