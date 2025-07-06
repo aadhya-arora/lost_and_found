@@ -1,0 +1,73 @@
+.contact-hero-section {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 60px;
+  padding: 100px 60px;
+  box-sizing: border-box;
+}
+
+.contact-left {
+  flex: 1;
+}
+
+.contact-heading {
+  margin-top: -30px;
+  color: #132a13;
+  font-size: 36px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+.contact-form .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.contact-form label {
+  margin-bottom: 5px;
+  color: #132a13;
+  font-weight: 600;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 10px;
+  border: 1px solid #90a955;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+}
+
+.contact-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background-color: #90a955;
+  color: #ffffff;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #132a13;
+}
+
+.contact-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.contact-image {
+  margin-top: -60px;
+  width: 600px;
+  height: auto;
+}
