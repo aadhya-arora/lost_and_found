@@ -11,6 +11,7 @@ const Contact = () => {
             <div className="form-group">
               <label htmlFor="name">Name</label>
               <input
+                className="contact-form-input"
                 type="text"
                 id="name"
                 placeholder="Enter your name"
@@ -20,6 +21,7 @@ const Contact = () => {
             <div className="form-group">
               <label htmlFor="email">Email</label>
               <input
+                className="contact-form-input"
                 type="email"
                 id="email"
                 placeholder="Enter your email"
@@ -29,6 +31,7 @@ const Contact = () => {
             <div className="form-group">
               <label htmlFor="query">Your Query</label>
               <textarea
+                className="contact-form-textarea"
                 id="query"
                 placeholder="Write your message here"
                 required

@@ -31,8 +31,8 @@
   font-weight: 600;
 }
 
-.contact-form input,
-.contact-form textarea {
+.contact-form-input,
+.contact-form-textarea {
   padding: 10px;
   border: 1px solid #90a955;
   border-radius: 8px;
@@ -40,7 +40,7 @@
   outline: none;
 }
 
-.contact-form textarea {
+.contact-form-textarea {
   min-height: 120px;
   resize: vertical;
 }
