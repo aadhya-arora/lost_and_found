@@ -1,0 +1,42 @@
+.report-hero-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.report-hero-search {
+  margin-top: 30px;
+  padding: 20px;
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+  border-radius: 10px;
+}
+.report-header {
+  color: #132a13;
+  font-size: 40px;
+}
+.report-subline {
+  margin-top: -10px;
+  font-family: "Figtree", sans-serif;
+  color: #224a22;
+}
+
+.report-choose {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: row;
+  gap: 40px;
+}
+
+.report-found,
+.report-lost {
+  background-color: #4f772d;
+  color: white;
+  font-family: "Figtree", sans-serif;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+}
+
+.report-found:hover,
+.report-lost:hover {
+  background-color: #132a13;
+}

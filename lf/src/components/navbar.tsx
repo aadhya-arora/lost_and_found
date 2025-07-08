@@ -12,13 +12,13 @@ const Navbar = () => {
           </a>
         </li>
         <li>
-          <a href="/lost" className="nav-item">
-            Lost Items
+          <a href="/found" className="nav-item">
+            Find Items
           </a>
         </li>
         <li>
-          <a href="/found" className="nav-item">
-            Found Items
+          <a href="/report" className="nav-item">
+            Report Items
           </a>
         </li>
         <li>

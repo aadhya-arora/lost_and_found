@@ -39,8 +39,8 @@ const Home = () => {
           <h1 className="web-name">Findify</h1>
           <p className="web-line">Where lost things find their way home</p>
           <div className="btns">
-            <button className="find"> Report Lost Item</button>
-            <button className="report"> Report Found Item</button>
+            <button className="find"> Find Your Lost Item</button>
+            <button className="report"> Report an Item</button>
           </div>
         </div>
         <div className="right-side">
