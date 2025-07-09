@@ -31,12 +31,69 @@
   background-color: #4f772d;
   color: white;
   font-family: "Figtree", sans-serif;
-  padding: 10px;
+  width: 170px;
+  padding: 15px;
   border: none;
   border-radius: 10px;
+  font-weight: 600;
+  font-size: 20px;
 }
 
 .report-found:hover,
 .report-lost:hover {
   background-color: #132a13;
+}
+
+.progress-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  margin-top: 40px;
+}
+
+.progress1,
+.progress2,
+.progress3 {
+  height: 15px;
+  background-color: #cbd5c0;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.report-lost-item-section {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  width: 700px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+}
+
+.report-lost-item-section {
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  width: 700px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  margin: 0 auto;
+  margin-top: 50px;
+  border-radius: 8px;
+}
+
+.lost-report-heading {
+  color: #4f772d;
+}
+
+.lost-item-name,
+.lost-category,
+.lost-description {
+  margin-top: 15px;
+  margin-bottom: 10px;
+  border-radius: 1rem;
+  padding: 10px;
+  border: 2px solid black;
 }
