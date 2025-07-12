@@ -3,16 +3,18 @@
   flex-direction: column;
   align-items: center;
 }
+
 .report-hero-search {
   margin-top: 30px;
   padding: 20px;
-  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
   border-radius: 10px;
 }
+
 .report-header {
   color: #132a13;
   font-size: 40px;
 }
+
 .report-subline {
   margin-top: -10px;
   font-family: "Figtree", sans-serif;
@@ -37,6 +39,7 @@
   border-radius: 10px;
   font-weight: 600;
   font-size: 20px;
+  cursor: pointer;
 }
 
 .report-found:hover,
@@ -66,34 +69,93 @@
 .report-lost-item-section {
   display: flex;
   flex-direction: column;
-  height: 500px;
   width: 700px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 40px;
-}
-
-.report-lost-item-section {
-  display: flex;
-  flex-direction: column;
   height: auto;
-  width: 700px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   padding: 40px;
-  margin: 0 auto;
-  margin-top: 50px;
+  margin: 50px auto 0;
   border-radius: 8px;
 }
 
 .lost-report-heading {
   color: #4f772d;
+  margin-bottom: 20px;
 }
 
 .lost-item-name,
 .lost-category,
 .lost-description {
-  margin-top: 15px;
-  margin-bottom: 10px;
+  margin-top: 10px;
+  margin-bottom: 20px;
   border-radius: 1rem;
   padding: 10px;
   border: 2px solid black;
+  font-family: "Figtree", sans-serif;
+  font-size: 16px;
+}
+
+.label-headings {
+  color: #132a13;
+  font-size: 18px;
+  font-weight: 800;
+  padding-bottom: 10px;
+}
+
+.label-headings2 {
+  color: #132a13;
+  font-size: 18px;
+  font-weight: 800;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.lost-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.submit-report-button {
+  background-color: #4f772d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-report-button:hover {
+  background-color: #132a13;
+}
+.image-preview-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin-top: 10px;
+}
+
+.image-preview {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.remove-image-cross {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 25px;
+  height: 25px;
+  font-size: 16px;
+  line-height: 22px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.remove-image-cross:hover {
+  background-color: rgba(0, 0, 0, 0.8);
 }
