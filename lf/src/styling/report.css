@@ -66,7 +66,8 @@
   transition: background-color 0.3s ease;
 }
 
-.report-lost-item-section {
+.report-lost-item-section,
+.report-found-item-section {
   display: flex;
   flex-direction: column;
   width: 700px;
@@ -77,14 +78,16 @@
   border-radius: 8px;
 }
 
-.lost-report-heading {
+.lost-report-heading,
+.found-report-heading {
   color: #4f772d;
   margin-bottom: 20px;
 }
 
 .lost-item-name,
 .lost-category,
-.lost-description {
+.lost-description,
+.found-item-name {
   margin-top: 10px;
   margin-bottom: 20px;
   border-radius: 1rem;
@@ -108,7 +111,8 @@
   padding-top: 10px;
   padding-bottom: 10px;
 }
-.lost-form {
+.lost-form,
+.found-form {
   display: flex;
   flex-direction: column;
 }
@@ -158,4 +162,35 @@
 
 .remove-image-cross:hover {
   background-color: rgba(0, 0, 0, 0.8);
+}
+.file-input-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.custom-file-button {
+  background-color: #4f772d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 5px 10px;
+  font-size: 16px;
+  font-weight: 200;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.custom-file-button:hover {
+  background-color: #132a13;
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
 }
