@@ -38,6 +38,7 @@
 }
 
 .auth-tabs-span {
+  font-size: 15px;
   padding: 0 20px;
   text-transform: uppercase;
   font-weight: 800;
@@ -58,7 +59,7 @@
   margin: 10px auto;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #ffeba7;
+  background-color: #fce496;
   transform: translateX(-27px);
 }
 
@@ -71,7 +72,7 @@
   height: 36px;
   border-radius: 50%;
   background-color: #132a13;
-  color: #ffeba7;
+  color: #fce496;
   font-family: "unicons";
   font-size: 24px;
   top: -10px;
@@ -133,13 +134,14 @@
 }
 
 .auth-form-section-heading {
+  font-size: 25px;
   margin-left: -73px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .form-group {
   position: relative;
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .form-style {
@@ -182,11 +184,10 @@
   border: none;
   border-radius: 4px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   text-transform: uppercase;
   background-color: #ffeba7;
-  color: #102770;
-  box-shadow: 0 8px 24px rgba(255, 235, 167, 0.2);
+  color: #546b54;
   cursor: pointer;
   transition: all 200ms linear;
   margin-left: -65px;
@@ -210,4 +211,82 @@
 
 .auth-link:hover {
   color: #ffeba7;
+}
+
+.bubble-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.bubble-background span {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  opacity: 0.3;
+  background: #132a13;
+  filter: blur(20px);
+  animation: floatAround 6s ease-in-out infinite alternate;
+}
+.bubble-background span:nth-child(1) {
+  top: 15%;
+  left: 25%;
+  width: 200px;
+  height: 200px;
+  animation-duration: 4s;
+}
+
+.bubble-background span:nth-child(2) {
+  top: 70%;
+  left: 55%;
+  width: 300px;
+  height: 300px;
+  animation-duration: 4s;
+}
+.bubble-background span:nth-child(3) {
+  top: 10%;
+  left: 75%;
+  width: 150px;
+  height: 150px;
+  animation-duration: 4s;
+}
+
+.bubble-background span:nth-child(4) {
+  top: 50%;
+  left: 95%;
+  width: 150px;
+  height: 150px;
+  animation-duration: 4s;
+}
+.bubble-background span:nth-child(5) {
+  top: 65%;
+  left: 5%;
+  width: 250px;
+  height: 250px;
+  animation-duration: 4s;
+}
+
+.bubble-background span:nth-child(6) {
+  top: -7%;
+  left: -3%;
+  width: 200px;
+  height: 200px;
+  animation-duration: 4s;
+}
+
+@keyframes floatAround {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(25px, -25px);
+  }
+
+  100% {
+    transform: translate(-25px, 25px);
+  }
 }

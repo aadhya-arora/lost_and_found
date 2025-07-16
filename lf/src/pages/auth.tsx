@@ -3,6 +3,15 @@ import "../styling/auth.css";
 const Auth = () => {
   return (
     <div className="auth-body">
+      <div className="bubble-background">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+
       <div className="auth-section">
         <div className="auth-container">
           <div className="auth-row full-height">

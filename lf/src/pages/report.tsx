@@ -194,7 +194,7 @@ const Report: React.FC = () => {
               {step === 1 && (
                 <>
                   <label htmlFor="name" className="label-headings">
-                    What do you find?
+                    What did you find?
                   </label>
                   <input
                     className="found-item-name"
@@ -294,7 +294,7 @@ const Report: React.FC = () => {
                     </div>
                   )}
                   <label className="label-headings2">
-                    Drop a Pin on the Map
+                    Where did you find it?
                   </label>
                   <MapContainer
                     center={[30.516, 76.6597]}
@@ -524,7 +524,7 @@ const Report: React.FC = () => {
                   )}
 
                   <label className="label-headings2">
-                    Drop a Pin on the Map
+                    Where did you lose it?
                   </label>
                   <MapContainer
                     center={[30.516, 76.6597]}
