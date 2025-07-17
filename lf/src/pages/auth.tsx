@@ -73,7 +73,7 @@ const Auth = () => {
                           <div className="form-group">
                             <input
                               type="text"
-                              name="logname"
+                              name="signName"
                               className="form-style"
                               placeholder="Your Full Name"
                               autoComplete="off"
@@ -83,7 +83,7 @@ const Auth = () => {
                           <div className="form-group mt-2">
                             <input
                               type="email"
-                              name="logemail"
+                              name="signEmail"
                               className="form-style"
                               placeholder="Your Email"
                               autoComplete="off"
@@ -93,7 +93,7 @@ const Auth = () => {
                           <div className="form-group mt-2">
                             <input
                               type="password"
-                              name="logpass"
+                              name="signPass"
                               className="form-style"
                               placeholder="Your Password"
                               autoComplete="off"
