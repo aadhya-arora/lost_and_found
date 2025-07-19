@@ -1,6 +1,33 @@
 import "../styling/auth.css";
-
+import { useState } from "react";
+interface Signupdata {
+  username?: string;
+  email?: string;
+  password?: string;
+}
+interface Logindata {
+  email?: string;
+  password?: string;
+}
 const Auth = () => {
+  const [signUpData, setSignUpData] = useState<Signupdata>({});
+  const [loginData, setLoginData] = useState<Logindata>({});
+  const backendUrl = "https://localhost:5000";
+
+  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSignUpData({
+      ...signUpData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLoginData({
+      ...loginData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   return (
     <div className="auth-body">
       <div className="bubble-background">
@@ -38,9 +65,11 @@ const Auth = () => {
                             <input
                               type="email"
                               name="logemail"
+                              value={loginData.email}
                               className="form-style"
                               placeholder="Your Email"
                               autoComplete="off"
+                              onChange={handleLoginChange}
                             />
                             <i className="input-icon uil uil-at"></i>
                           </div>
@@ -48,9 +77,11 @@ const Auth = () => {
                             <input
                               type="password"
                               name="logpass"
+                              value={loginData.password}
                               className="form-style"
                               placeholder="Your Password"
                               autoComplete="off"
+                              onChange={handleLoginChange}
                             />
                             <i className="input-icon uil uil-lock-alt"></i>
                           </div>
@@ -77,6 +108,8 @@ const Auth = () => {
                               className="form-style"
                               placeholder="Your Full Name"
                               autoComplete="off"
+                              value={signUpData.username}
+                              onChange={handleSignupChange}
                             />
                             <i className="input-icon uil uil-user"></i>
                           </div>
@@ -87,6 +120,8 @@ const Auth = () => {
                               className="form-style"
                               placeholder="Your Email"
                               autoComplete="off"
+                              value={signUpData.email}
+                              onChange={handleSignupChange}
                             />
                             <i className="input-icon uil uil-at"></i>
                           </div>
@@ -97,6 +132,8 @@ const Auth = () => {
                               className="form-style"
                               placeholder="Your Password"
                               autoComplete="off"
+                              value={signUpData.password}
+                              onChange={handleSignupChange}
                             />
                             <i className="input-icon uil uil-lock-alt"></i>
                           </div>
