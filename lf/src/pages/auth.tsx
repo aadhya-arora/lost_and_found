@@ -28,6 +28,29 @@ const Auth = () => {
     });
   };
 
+  const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${backendUrl}/signUp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signUpData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`SignUp successful`);
+        window.location.href = "/";
+      } else {
+        alert("Signup failed:" + data.error);
+      }
+    } catch (err) {
+      console.error("Signup failed");
+      alert("Server error");
+    }
+  };
+
   return (
     <div className="auth-body">
       <div className="bubble-background">
@@ -101,45 +124,47 @@ const Auth = () => {
                       <div className="auth-center-wrap">
                         <div className="auth-form-section">
                           <h4 className="auth-form-section-heading">Sign Up</h4>
-                          <div className="form-group">
-                            <input
-                              type="text"
-                              name="signName"
-                              className="form-style"
-                              placeholder="Your Full Name"
-                              autoComplete="off"
-                              value={signUpData.username}
-                              onChange={handleSignupChange}
-                            />
-                            <i className="input-icon uil uil-user"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="email"
-                              name="signEmail"
-                              className="form-style"
-                              placeholder="Your Email"
-                              autoComplete="off"
-                              value={signUpData.email}
-                              onChange={handleSignupChange}
-                            />
-                            <i className="input-icon uil uil-at"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="password"
-                              name="signPass"
-                              className="form-style"
-                              placeholder="Your Password"
-                              autoComplete="off"
-                              value={signUpData.password}
-                              onChange={handleSignupChange}
-                            />
-                            <i className="input-icon uil uil-lock-alt"></i>
-                          </div>
-                          <a href="#" className="btn mt-4">
-                            submit
-                          </a>
+                          <form onSubmit={handleSignupSubmit}>
+                            <div className="form-group">
+                              <input
+                                type="text"
+                                name="username"
+                                className="form-style"
+                                placeholder="Your Full Name"
+                                autoComplete="off"
+                                value={signUpData.username}
+                                onChange={handleSignupChange}
+                              />
+                              <i className="input-icon uil uil-user"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="email"
+                                name="email"
+                                className="form-style"
+                                placeholder="Your Email"
+                                autoComplete="off"
+                                value={signUpData.email}
+                                onChange={handleSignupChange}
+                              />
+                              <i className="input-icon uil uil-at"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="password"
+                                name="password"
+                                className="form-style"
+                                placeholder="Your Password"
+                                autoComplete="off"
+                                value={signUpData.password}
+                                onChange={handleSignupChange}
+                              />
+                              <i className="input-icon uil uil-lock-alt"></i>
+                            </div>
+                            <button type="submit" className="btn mt-4">
+                              Submit
+                            </button>
+                          </form>
                         </div>
                       </div>
                     </div>
