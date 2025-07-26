@@ -10,9 +10,14 @@ interface Logindata {
   password?: string;
 }
 const Auth = () => {
-  const [signUpData, setSignUpData] = useState<Signupdata>({});
+  const [signUpData, setSignUpData] = useState<Signupdata>({
+    username: "",
+    email: "",
+    password: "",
+  });
+
   const [loginData, setLoginData] = useState<Logindata>({});
-  const backendUrl = "https://localhost:5000";
+  const backendUrl = "http://localhost:5000";
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSignUpData({
@@ -103,7 +108,7 @@ const Auth = () => {
                               value={loginData.password}
                               className="form-style"
                               placeholder="Your Password"
-                              autoComplete="off"
+                              autoComplete="new-password"
                               onChange={handleLoginChange}
                             />
                             <i className="input-icon uil uil-lock-alt"></i>
@@ -155,7 +160,7 @@ const Auth = () => {
                                 name="password"
                                 className="form-style"
                                 placeholder="Your Password"
-                                autoComplete="off"
+                                autoComplete="new-password"
                                 value={signUpData.password}
                                 onChange={handleSignupChange}
                               />

@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 const signUpSchema = new mongoose.Schema({
-  signName: {
+  username: {
     type: String,
     required: true,
   },
-  signEmail: {
+  email: {
     type: String,
     required: true,
   },
-  signPass: {
+  password: {
     type: String,
     required: true,
   },
