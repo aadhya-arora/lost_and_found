@@ -16,7 +16,10 @@ const Auth = () => {
     password: "",
   });
 
-  const [loginData, setLoginData] = useState<Logindata>({});
+  const [loginData, setLoginData] = useState<Logindata>({
+    email: "",
+    password: "",
+  });
   const backendUrl = "http://localhost:5000";
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,12 +49,37 @@ const Auth = () => {
       const data = await res.json();
       if (res.ok) {
         alert(`SignUp successful`);
-        window.location.href = "/";
+        window.location.href = "/auth";
       } else {
         alert("Signup failed:" + data.error);
       }
     } catch (err) {
       console.error("Signup failed");
+      alert("Server error");
+    }
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${backendUrl}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(loginData),
+      });
+
+      const text = await res.text();
+      if (res.ok && text !== "You can't login") {
+        alert("Login successful!");
+        window.location.href = "/";
+      } else {
+        alert("Login failed:" + text);
+      }
+    } catch (err) {
+      console.error("Login error", err);
       alert("Server error");
     }
   };
@@ -89,38 +117,40 @@ const Auth = () => {
                       <div className="auth-center-wrap">
                         <div className="auth-form-section">
                           <h4 className="auth-form-section-heading">Log In</h4>
-                          <div className="form-group">
-                            <input
-                              type="email"
-                              name="logemail"
-                              value={loginData.email}
-                              className="form-style"
-                              placeholder="Your Email"
-                              autoComplete="off"
-                              onChange={handleLoginChange}
-                            />
-                            <i className="input-icon uil uil-at"></i>
-                          </div>
-                          <div className="form-group mt-2">
-                            <input
-                              type="password"
-                              name="logpass"
-                              value={loginData.password}
-                              className="form-style"
-                              placeholder="Your Password"
-                              autoComplete="new-password"
-                              onChange={handleLoginChange}
-                            />
-                            <i className="input-icon uil uil-lock-alt"></i>
-                          </div>
-                          <a href="#" className="btn">
-                            submit
-                          </a>
-                          <p className="auth-footer-text">
-                            <a href="#0" className="auth-link">
-                              Forgot your password?
-                            </a>
-                          </p>
+                          <form onSubmit={handleLoginSubmit}>
+                            <div className="form-group">
+                              <input
+                                type="email"
+                                name="email"
+                                value={loginData.email}
+                                className="form-style"
+                                placeholder="Your Email"
+                                autoComplete="off"
+                                onChange={handleLoginChange}
+                              />
+                              <i className="input-icon uil uil-at"></i>
+                            </div>
+                            <div className="form-group mt-2">
+                              <input
+                                type="password"
+                                name="password"
+                                value={loginData.password}
+                                className="form-style"
+                                placeholder="Your Password"
+                                autoComplete="new-password"
+                                onChange={handleLoginChange}
+                              />
+                              <i className="input-icon uil uil-lock-alt"></i>
+                            </div>
+                            <button type="submit" className="btn mt-4">
+                              Submit
+                            </button>
+                            <p className="auth-footer-text">
+                              <a href="#0" className="auth-link">
+                                Forgot your password?
+                              </a>
+                            </p>
+                          </form>
                         </div>
                       </div>
                     </div>

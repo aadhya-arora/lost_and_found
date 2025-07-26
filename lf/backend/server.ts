@@ -88,16 +88,44 @@ app.post("/signUp", (req, res) => {
         );
 
         if (error.code === 11000) {
-          return res
-            .status(409)
-            .json({
-              error: "User with this email or username already exists.",
-            });
+          return res.status(409).json({
+            error: "User with this email or username already exists.",
+          });
         }
         res.status(500).json({ error: "Server Error: Could not create user." });
       }
     });
   });
+});
+
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const user = await SignUp.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(400).json({ error: "Email not found" });
+    }
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    const token = jwt.sign(
+      { email: user.email, username: user.username },
+      jwtSecret
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+    });
+    res.status(200).json({ message: "Login Successful" });
+  } catch (err) {
+    console.error("Login error", err);
+    res.status(500).json({ error: "Server Erorr" });
+  }
 });
 
 app.listen(PORT, () => {
