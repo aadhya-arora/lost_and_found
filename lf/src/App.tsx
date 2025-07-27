@@ -7,6 +7,7 @@ import Found from "./pages/found";
 import Report from "./pages/report";
 import Navbar from "./components/navbar";
 import { Outlet } from "react-router-dom";
+import Settings from "./pages/settings";
 
 function App() {
   const MainLayout = () => {
@@ -27,6 +28,7 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/report" element={<Report />} />
           <Route path="/found" element={<Found />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         <Route path="/auth" element={<Auth />} />

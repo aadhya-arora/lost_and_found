@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Import useState
+import { useState } from "react"; // Import useState
 import { FaUserCircle } from "react-icons/fa";
 import "../styling/navbar.css";
 
