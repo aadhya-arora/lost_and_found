@@ -1,9 +1,21 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import "../styling/settings.css";
-// import { FaInfoCircle } from "react-icons/fa"; // Remove if not using other info icons
 
-const Settings = () => {
-  const [activeTab, setActiveTab] = useState("Account");
+const Settings: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>("Account");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
+  const [emailNotificationsOn, setEmailNotificationsOn] =
+    useState<boolean>(true);
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedLanguage(e.target.value);
+    console.log(`Language changed to: ${e.target.value}`);
+  };
+  const handleEmailNotificationsToggle = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setEmailNotificationsOn(e.target.checked);
+    console.log(`Email Notifications: ${e.target.checked ? "On" : "Off"}`);
+  };
 
   return (
     <>
@@ -20,23 +32,17 @@ const Settings = () => {
         >
           Preferences
         </a>
-        <a
-          className={activeTab === "Contact Information" ? "active" : ""}
-          onClick={() => setActiveTab("Contact Information")}
-        >
-          Contact Information
-        </a>
       </div>
 
       <div className="settings-content">
         {activeTab === "Account" && (
-          <div>
+          <div className="accounts-tab">
             <p className="account-settings-p">
               Change your account information
             </p>
             <div className="account-settings">
               <p>Username</p>
-              <input type="text" value="aadiiiiiiaaa" readOnly />{" "}
+              <input type="text" value="aadiiiiiiaaa" readOnly />
               <a href="#" className="action-link">
                 Change username
               </a>
@@ -47,15 +53,16 @@ const Settings = () => {
               </a>
               <p>Email</p>
               <input type="email" value="aadhu2705@gmail.com" readOnly />
-              <br />
-              <p>Date of Birth</p>
+              <span className="grid-placeholder"></span> <p>Contact No:</p>
               <div className="date-input-container">
-                <input type="date" value="2005-08-27" readOnly />
+                <input type="tel" value="No data yet" readOnly />
                 <span
                   className="info-icon"
-                  title="Your date of birth is private"
+                  title="Add your contact information"
                 >
-                  ⓘ
+                  <a href="#" className="action-link">
+                    Add contact info
+                  </a>
                 </span>
               </div>
               <span className="grid-placeholder"></span>{" "}
@@ -65,11 +72,51 @@ const Settings = () => {
             </div>
           </div>
         )}
+
         {activeTab === "Preferences" && (
-          <div className="tab-content">Preferences Content...</div>
-        )}
-        {activeTab === "Contact Information" && (
-          <div className="tab-content">Contact Info Content...</div>
+          <div className="preference-tab">
+            <p className="account-settings-p">Manage your preferences</p>
+            <div className="preference-settings">
+              <p>Language</p>
+              <select value={selectedLanguage} onChange={handleLanguageChange}>
+                <option value="English">English</option>
+                <option value="Hindi">हिन्दी (Hindi)</option>
+                <option value="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+              </select>
+              <span className="grid-placeholder"></span>
+              <p>Time Zone</p>
+              <select defaultValue="Asia/Kolkata">
+                <option value="UTC-12">UTC-12:00 (Baker Island)</option>
+                <option value="Asia/Kolkata">UTC+05:30 (Kolkata)</option>
+                <option value="America/New_York">UTC-05:00 (New York)</option>
+                <option value="Europe/London">UTC+00:00 (London)</option>
+                <option value="Asia/Tokyo">UTC+09:00 (Tokyo)</option>
+                <option value="Australia/Sydney">UTC+10:00 (Sydney)</option>
+              </select>
+              <span className="grid-placeholder"></span>
+              <p>Email Notifications</p>
+              <div className="toggle-switch-container">
+                <input
+                  type="checkbox"
+                  id="emailNotifications"
+                  checked={emailNotificationsOn}
+                  onChange={handleEmailNotificationsToggle}
+                  className="toggle-checkbox"
+                />
+                <label
+                  htmlFor="emailNotifications"
+                  className="toggle-label"
+                ></label>
+                <span className="toggle-text">
+                  {emailNotificationsOn ? "On" : "Off"}
+                </span>
+              </div>
+              <span className="grid-placeholder"></span> {/* For alignment */}
+              <button type="submit" className="submit-button">
+                Save Preferences
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </>

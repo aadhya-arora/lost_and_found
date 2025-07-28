@@ -55,7 +55,7 @@ const Navbar = () => {
                 <a href="/settings">Settings</a>
               </li>
               <li>
-                <a href="/help">Help</a>
+                <a href="/contact">Help</a>
               </li>
               <li>
                 <a href="/logout">Log Out</a>
