@@ -8,6 +8,7 @@ import Report from "./pages/report";
 import Navbar from "./components/navbar";
 import { Outlet } from "react-router-dom";
 import Settings from "./pages/settings";
+import Profile from "./pages/profile";
 
 function App() {
   const MainLayout = () => {
@@ -32,6 +33,7 @@ function App() {
         </Route>
 
         <Route path="/auth" element={<Auth />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   );
