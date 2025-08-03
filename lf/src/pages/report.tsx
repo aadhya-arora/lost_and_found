@@ -46,15 +46,15 @@ interface FoundDataType {
   email: string;
 }
 
-interface LocationMarkerProps {
-  setFormData: React.Dispatch<React.SetStateAction<FormDataType>>;
-  formData: FormDataType;
+interface LocationMarkerProps<T> {
+  setFormData: React.Dispatch<React.SetStateAction<T>>;
+  formData: T;
 }
 
-const LocationMarker: React.FC<LocationMarkerProps> = ({
+function LocationMarker<T extends { location: string }>({
   setFormData,
   formData,
-}) => {
+}: LocationMarkerProps<T>) {
   const [position, setPosition] = useState<LatLng | null>(null);
 
   useMapEvents({
@@ -68,7 +68,7 @@ const LocationMarker: React.FC<LocationMarkerProps> = ({
   });
 
   return position ? <Marker position={position} /> : null;
-};
+}
 
 const Report: React.FC = () => {
   const [step, setStep] = useState<number>(1);
@@ -105,46 +105,76 @@ const Report: React.FC = () => {
     email: "",
   });
 
-  const handleRemoveImage = () => {
-    setFormData({
-      ...formData,
+  // Remove handlers
+  const handleRemoveImageLost = () => {
+    setFormData((prev) => ({
+      ...prev,
       image: null,
       imagePreview: null,
-    });
+    }));
   };
 
-  const handleChange = (
+  const handleRemoveImageFound = () => {
+    setFoundData((prev) => ({
+      ...prev,
+      image: null,
+      imagePreview: null,
+    }));
+  };
+
+  // Change handlers
+  const handleChangeLost = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, files } = e.target as HTMLInputElement;
     if (files && files.length > 0) {
       const file = files[0];
-      setFormData({
-        ...formData,
+      setFormData((prev) => ({
+        ...prev,
         [id]: file,
         imagePreview: URL.createObjectURL(file),
-      });
+      }));
     } else {
-      setFormData({ ...formData, [id]: value });
+      setFormData((prev) => ({ ...prev, [id]: value }));
     }
   };
 
-  const handleNext = () => {
-    setStep((prev) => prev + 1);
+  const handleChangeFound = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value, files } = e.target as HTMLInputElement;
+    if (files && files.length > 0) {
+      const file = files[0];
+      setFoundData((prev) => ({
+        ...prev,
+        [id]: file,
+        imagePreview: URL.createObjectURL(file),
+      }));
+    } else {
+      setFoundData((prev) => ({ ...prev, [id]: value }));
+    }
   };
 
-  const handleBack = () => {
-    setStep((prev) => prev - 1);
-  };
+  const handleNext = () => setStep((prev) => prev + 1);
+  const handleBack = () => setStep((prev) => prev - 1);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  // You may wish to split these into two
+  const handleSubmitLost = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitted data:", formData);
+    console.log("Submitted lost data:", formData);
     alert("Lost item report submitted successfully!");
+    // Optionally clear state & go to step 1
+  };
+  const handleSubmitFound = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Submitted found data:", foundData);
+    alert("Found item report submitted successfully!");
+    // Optionally clear state & go to step 1
   };
 
   return (
     <div>
+      {/* Hero Section */}
       <div className="report-hero-section">
         <div className="report-hero-search">
           <FaSearch size={30} color="#4f772d" />
@@ -156,7 +186,10 @@ const Report: React.FC = () => {
         <div className="report-choose">
           <button
             className="report-found"
-            onClick={() => setSelectedOption("found")}
+            onClick={() => {
+              setSelectedOption("found");
+              setStep(1);
+            }}
             type="button"
           >
             <HiOutlineCheckCircle size={30} /> <br />
@@ -164,7 +197,10 @@ const Report: React.FC = () => {
           </button>
           <button
             className="report-lost"
-            onClick={() => setSelectedOption("lost")}
+            onClick={() => {
+              setSelectedOption("lost");
+              setStep(1);
+            }}
             type="button"
           >
             <HiOutlineExclamation size={30} /> <br />
@@ -172,6 +208,8 @@ const Report: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Found Section */}
       {selectedOption === "found" && (
         <div className="found-report">
           <div className="progress-bar">
@@ -190,9 +228,14 @@ const Report: React.FC = () => {
           </div>
           <div className="report-found-item-section">
             <h1 className="found-report-heading">Report a Found Item</h1>
-            <form className="found-form">
+            <form
+              className="found-form"
+              onSubmit={handleSubmitFound}
+              autoComplete="off"
+            >
               {step === 1 && (
                 <>
+                  {/* ...Other Inputs... */}
                   <label htmlFor="name" className="label-headings">
                     What did you find?
                   </label>
@@ -202,7 +245,7 @@ const Report: React.FC = () => {
                     id="name"
                     placeholder="Backpack"
                     value={foundData.name}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                     required
                   />
                   <label htmlFor="color" className="label-headings">
@@ -214,7 +257,7 @@ const Report: React.FC = () => {
                     id="color"
                     placeholder="Black"
                     value={foundData.color}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                   />
                   <label htmlFor="brand" className="label-headings">
                     Brand(optional)
@@ -225,7 +268,7 @@ const Report: React.FC = () => {
                     id="brand"
                     placeholder="Wildcraft"
                     value={foundData.brand}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                   />
                   <label htmlFor="uniqueId" className="label-headings">
                     Unique Identification (optional)
@@ -236,7 +279,7 @@ const Report: React.FC = () => {
                     id="uniqueId"
                     placeholder="E.g., sticker inside pocket"
                     value={foundData.uniqueId}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                   />
                   <label htmlFor="dateFound" className="label-headings">
                     Date Found
@@ -246,7 +289,7 @@ const Report: React.FC = () => {
                     type="date"
                     id="dateFound"
                     value={foundData.dateFound}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                     required
                   />
                   <button
@@ -263,18 +306,21 @@ const Report: React.FC = () => {
                   <label htmlFor="image" className="label-headings">
                     Upload Image
                   </label>
-                  <div className="file-input-wrapper">
-                    <button type="button" className="custom-file-button">
-                      Browse
-                    </button>
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                  {/* hide Browse if image is present */}
+                  {!foundData.imagePreview && (
+                    <div className="file-input-wrapper">
+                      <button type="button" className="custom-file-button">
+                        Browse
+                      </button>
+                      <input
+                        type="file"
+                        id="image"
+                        accept="image/*"
+                        onChange={handleChangeFound}
+                        required
+                      />
+                    </div>
+                  )}
 
                   {foundData.imagePreview && (
                     <div className="image-preview-wrapper">
@@ -286,9 +332,8 @@ const Report: React.FC = () => {
                       <button
                         type="button"
                         className="remove-image-cross"
-                        onClick={handleRemoveImage}
+                        onClick={handleRemoveImageFound}
                       >
-                        {" "}
                         ✖
                       </button>
                     </div>
@@ -309,15 +354,15 @@ const Report: React.FC = () => {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
+                    {/* Use FoundData state for geolocation */}
                     <LocationMarker
-                      setFormData={setFormData}
-                      formData={formData}
+                      setFormData={setFoundData}
+                      formData={foundData}
                     />
                   </MapContainer>
                   {foundData.location && (
                     <p>
-                      <strong>Selected Location:</strong>
-                      {foundData.location}
+                      <strong>Selected Location:</strong> {foundData.location}
                     </p>
                   )}
                   <div style={{ display: "flex", gap: "10px" }}>
@@ -342,7 +387,7 @@ const Report: React.FC = () => {
                 <>
                   <h3>Suggested Category</h3>
                   <p style={{ marginTop: "-5px" }}>
-                    <strong>Category:</strong> {formData.category}
+                    <strong>Category:</strong> {foundData.category}
                   </p>
                   <label htmlFor="phone" className="label-headings">
                     Phone Number
@@ -353,7 +398,7 @@ const Report: React.FC = () => {
                     id="phone"
                     placeholder="Enter your phone number"
                     value={foundData.phone}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                     required
                   />
                   <label htmlFor="email" className="label-headings">
@@ -365,7 +410,7 @@ const Report: React.FC = () => {
                     id="email"
                     placeholder="Enter your email"
                     value={foundData.email}
-                    onChange={handleChange}
+                    onChange={handleChangeFound}
                     required
                   />
                   <div style={{ display: "flex", gap: "10px" }}>
@@ -386,6 +431,8 @@ const Report: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Lost Section */}
       {selectedOption === "lost" && (
         <div className="file-report">
           <div className="progress-bar">
@@ -402,10 +449,13 @@ const Report: React.FC = () => {
               style={{ backgroundColor: step >= 3 ? "#4f772d" : "#cbd5c0" }}
             ></div>
           </div>
-
           <div className="report-lost-item-section">
             <h1 className="lost-report-heading">Report a Lost Item</h1>
-            <form onSubmit={handleSubmit} className="lost-form">
+            <form
+              onSubmit={handleSubmitLost}
+              className="lost-form"
+              autoComplete="off"
+            >
               {step === 1 && (
                 <>
                   <label htmlFor="name" className="label-headings">
@@ -417,7 +467,7 @@ const Report: React.FC = () => {
                     id="name"
                     placeholder="Backpack"
                     value={formData.name}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                     required
                   />
                   <label htmlFor="color" className="label-headings">
@@ -429,9 +479,8 @@ const Report: React.FC = () => {
                     id="color"
                     placeholder="E.g., Black"
                     value={formData.color}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                   />
-
                   <label htmlFor="brand" className="label-headings">
                     Brand (optional)
                   </label>
@@ -441,9 +490,8 @@ const Report: React.FC = () => {
                     id="brand"
                     placeholder="E.g., Wildcraft"
                     value={formData.brand}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                   />
-
                   <label htmlFor="uniqueId" className="label-headings">
                     Unique Identification (optional)
                   </label>
@@ -453,9 +501,8 @@ const Report: React.FC = () => {
                     id="uniqueId"
                     placeholder="E.g., sticker inside pocket"
                     value={formData.uniqueId}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                   />
-
                   <label htmlFor="dateLost" className="label-headings">
                     Date Lost
                   </label>
@@ -464,7 +511,7 @@ const Report: React.FC = () => {
                     type="date"
                     id="dateLost"
                     value={formData.dateLost}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                     required
                   />
                   <label htmlFor="timeLost" className="label-headings">
@@ -475,7 +522,7 @@ const Report: React.FC = () => {
                     type="time"
                     id="timeLost"
                     value={formData.timeLost}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                     required
                   />
                   <button
@@ -493,18 +540,20 @@ const Report: React.FC = () => {
                   <label htmlFor="image" className="label-headings">
                     Upload Image
                   </label>
-                  <div className="file-input-wrapper">
-                    <button type="button" className="custom-file-button">
-                      Browse
-                    </button>
-                    <input
-                      type="file"
-                      id="image"
-                      accept="image/*"
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
+                  {!formData.imagePreview && (
+                    <div className="file-input-wrapper">
+                      <button type="button" className="custom-file-button">
+                        Browse
+                      </button>
+                      <input
+                        type="file"
+                        id="image"
+                        accept="image/*"
+                        onChange={handleChangeLost}
+                        required
+                      />
+                    </div>
+                  )}
 
                   {formData.imagePreview && (
                     <div className="image-preview-wrapper">
@@ -516,7 +565,7 @@ const Report: React.FC = () => {
                       <button
                         type="button"
                         className="remove-image-cross"
-                        onClick={handleRemoveImage}
+                        onClick={handleRemoveImageLost}
                       >
                         ✖
                       </button>
@@ -539,18 +588,17 @@ const Report: React.FC = () => {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
+                    {/* Use LostData state for geolocation */}
                     <LocationMarker
                       setFormData={setFormData}
                       formData={formData}
                     />
                   </MapContainer>
-
                   {formData.location && (
                     <p>
                       <strong>Selected Location:</strong> {formData.location}
                     </p>
                   )}
-
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       type="button"
@@ -576,7 +624,6 @@ const Report: React.FC = () => {
                   <p>
                     <strong>Category:</strong> {formData.category}
                   </p>
-
                   <label htmlFor="phone" className="label-headings">
                     Phone Number
                   </label>
@@ -586,10 +633,9 @@ const Report: React.FC = () => {
                     id="phone"
                     placeholder="Enter your phone number"
                     value={formData.phone}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                     required
                   />
-
                   <label htmlFor="email" className="label-headings">
                     Email
                   </label>
@@ -599,10 +645,9 @@ const Report: React.FC = () => {
                     id="email"
                     placeholder="Enter your email"
                     value={formData.email}
-                    onChange={handleChange}
+                    onChange={handleChangeLost}
                     required
                   />
-
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       type="button"

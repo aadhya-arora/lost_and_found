@@ -49,13 +49,10 @@ const Navbar = () => {
           <div className="profile-menu-tooltip">
             <ul>
               <li>
-                <a href="/profile">My Profile</a>
-              </li>
-              <li>
                 <a href="/settings">Settings</a>
               </li>
               <li>
-                <a href="/contact">Help</a>
+                <a href="/help">Help</a>
               </li>
               <li>
                 <a href="/logout">Log Out</a>
