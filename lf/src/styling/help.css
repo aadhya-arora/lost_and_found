@@ -1,0 +1,8 @@
+.help-body {
+  background: linear-gradient(135deg, #ecf39e 0%, #ffffff 100%);
+}
+.help-heading {
+  color: linear-gradient(135deg, #132a13 0%, #ffffff 100%);
+  font-weight: 700;
+  font-size: 40px;
+}

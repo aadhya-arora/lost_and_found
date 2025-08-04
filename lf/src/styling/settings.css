@@ -207,3 +207,63 @@
 .preference-tab {
   padding-bottom: 140px;
 }
+.delete-tab {
+  padding-bottom: 70px;
+}
+
+.delete-tab {
+  padding-bottom: 120px;
+}
+
+.delete-settings {
+  max-width: 75%;
+  width: 95%;
+  margin: 20px auto;
+  padding: 30px;
+  border: 1px solid #132a13;
+  border-radius: 8px;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: "Figtree", sans-serif;
+}
+
+.delete-settings p {
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-settings input[type="password"] {
+  background-color: #fff !important;
+  color: #000 !important;
+  padding: 10px 12px;
+  border: 1px solid #333;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
+  max-width: 300px;
+  box-shadow: none !important;
+}
+.delete-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.submit-button.danger {
+  background-color: #132a13;
+}
+
+.submit-button.danger:hover {
+  background-color: #405f24;
+}
+
+.submit-button.cancel {
+  background-color: #ccc;
+  color: #333;
+}
+
+.submit-button.cancel:hover {
+  background-color: #999;
+}

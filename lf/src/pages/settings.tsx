@@ -32,6 +32,12 @@ const Settings: React.FC = () => {
         >
           Preferences
         </a>
+        <a
+          className={activeTab === "Delete" ? "active" : ""}
+          onClick={() => setActiveTab("Delete")}
+        >
+          Delete Account
+        </a>
       </div>
 
       <div className="settings-content">
@@ -115,6 +121,24 @@ const Settings: React.FC = () => {
               <button type="submit" className="submit-button">
                 Save Preferences
               </button>
+            </div>
+          </div>
+        )}
+        {activeTab === "Delete" && (
+          <div className="delete-tab">
+            <p className="account-settings-p">
+              Delete your account permanently
+            </p>
+            <div className="delete-settings">
+              <p>We're sorry to see you go. This action is irreversible.</p>
+              <p>Please confirm your password to proceed:</p>
+              <input type="password" placeholder="Enter your password" />
+              <div className="delete-buttons">
+                <button className="submit-button danger">
+                  Delete My Account
+                </button>
+                <button className="submit-button cancel">Cancel</button>
+              </div>
             </div>
           </div>
         )}

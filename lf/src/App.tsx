@@ -8,7 +8,7 @@ import Report from "./pages/report";
 import Navbar from "./components/navbar";
 import { Outlet } from "react-router-dom";
 import Settings from "./pages/settings";
-
+import Help from "./pages/help";
 function App() {
   const MainLayout = () => {
     return (
@@ -32,6 +32,7 @@ function App() {
         </Route>
 
         <Route path="/auth" element={<Auth />} />
+        <Route path="/help" element={<Help />} />
       </Routes>
     </BrowserRouter>
   );
