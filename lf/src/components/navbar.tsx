@@ -55,6 +55,9 @@ const Navbar = () => {
                 <a href="/help">Help</a>
               </li>
               <li>
+                <a href="/my-reports">My Reports</a>
+              </li>
+              <li>
                 <a href="/logout">Log Out</a>
               </li>
             </ul>
