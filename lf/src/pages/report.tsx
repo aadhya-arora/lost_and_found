@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L, { LatLng } from "leaflet";
 import Footer from "../components/footer";
+import axios from "axios";
 
 delete (L.Icon.Default as any).prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -159,17 +160,70 @@ const Report: React.FC = () => {
   const handleBack = () => setStep((prev) => prev - 1);
 
   // You may wish to split these into two
-  const handleSubmitLost = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitted lost data:", formData);
-    alert("Lost item report submitted successfully!");
-    // Optionally clear state & go to step 1
+    try {
+      const formDataToSend = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null) formDataToSend.append(key, value as any);
+      });
+
+      await axios.post("http://localhost:5000/lost", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Lost item report submitted successfully!");
+      setFormData({
+        name: "",
+        color: "",
+        brand: "",
+        uniqueId: "",
+        dateLost: "",
+        timeLost: "",
+        image: null,
+        imagePreview: null,
+        location: "",
+        category: "Bag",
+        phone: "",
+        email: "",
+      });
+      setStep(1);
+    } catch (error) {
+      console.error("Error submitting lost report:", error);
+      alert("Error submitting lost report. Please try again.");
+    }
   };
-  const handleSubmitFound = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitted found data:", foundData);
-    alert("Found item report submitted successfully!");
-    // Optionally clear state & go to step 1
+    try {
+      const formDataToSend = new FormData();
+      Object.entries(foundData).forEach(([key, value]) => {
+        if (value !== null) formDataToSend.append(key, value as any);
+      });
+
+      await axios.post("http://localhost:5000/found", formDataToSend, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("Found item report submitted successfully!");
+      setFoundData({
+        name: "",
+        color: "",
+        brand: "",
+        uniqueId: "",
+        dateFound: "",
+        image: null,
+        imagePreview: null,
+        location: "",
+        category: "",
+        phone: "",
+        email: "",
+      });
+      setStep(1);
+    } catch (error) {
+      console.error("Error submitting found report:", error);
+      alert("Error submitting found report. Please try again.");
+    }
   };
 
   return (

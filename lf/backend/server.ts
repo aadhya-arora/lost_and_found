@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,6 +15,8 @@ import SignUp from "./auth.js";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import FoundItem from "./foundItem.js";
+import LostItem from "./lostItem.js";
 
 const PORT = process.env.PORT || 5000;
 const jwtSecret = process.env.JWT_SECRET!;
@@ -33,6 +36,22 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+    );
+  },
+});
+
+const upload = multer({ storage: storage });
 
 mongoose
   .connect(process.env.MONGO_URI as string)
@@ -125,6 +144,98 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     console.error("Login error", err);
     res.status(500).json({ error: "Server Erorr" });
+  }
+});
+
+app.post("/lost", upload.single("image"), async (req, res) => {
+  try {
+    const {
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateLost,
+      timeLost,
+      location,
+      category,
+      phone,
+      email,
+    } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+    const lostItem = new LostItem({
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateLost,
+      timeLost,
+      imageUrl,
+      location,
+      category,
+      phone,
+      email,
+    });
+
+    await lostItem.save();
+    res.status(201).json(lostItem);
+  } catch (error: any) {
+    console.error("Error saving lost item:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get("/lost", async (req, res) => {
+  try {
+    const items = await LostItem.find().sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/found", upload.single("image"), async (req, res) => {
+  try {
+    const {
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateFound,
+      location,
+      category,
+      phone,
+      email,
+    } = req.body;
+    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+    const foundItem = new FoundItem({
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateFound,
+      imageUrl,
+      location,
+      category,
+      phone,
+      email,
+    });
+
+    await foundItem.save();
+    res.status(201).json(foundItem);
+  } catch (error: any) {
+    console.error("Error saving found item:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.get("/found", async (req, res) => {
+  try {
+    const items = await FoundItem.find().sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
