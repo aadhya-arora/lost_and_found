@@ -194,7 +194,45 @@ app.get("/lost", async (req, res) => {
   }
 });
 
-app.post("/found", upload.single("image"), async (req, res) => {
+app.post("/lost", async (req, res) => {
+  try {
+    const {
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateLost,
+      timeLost,
+      location,
+      category,
+      phone,
+      email,
+      imageUrl,
+    } = req.body;
+
+    const lostItem = new LostItem({
+      name,
+      color,
+      brand,
+      uniqueId,
+      dateLost,
+      timeLost,
+      imageUrl,
+      location,
+      category,
+      phone,
+      email,
+    });
+
+    await lostItem.save();
+    res.status(201).json(lostItem);
+  } catch (error: any) {
+    console.error("Error saving lost item:", error.message);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/found", async (req, res) => {
   try {
     const {
       name,
@@ -206,8 +244,8 @@ app.post("/found", upload.single("image"), async (req, res) => {
       category,
       phone,
       email,
+      imageUrl,
     } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
 
     const foundItem = new FoundItem({
       name,
@@ -229,16 +267,6 @@ app.post("/found", upload.single("image"), async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
-app.get("/found", async (req, res) => {
-  try {
-    const items = await FoundItem.find().sort({ createdAt: -1 });
-    res.status(200).json(items);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -159,67 +159,77 @@ const Report: React.FC = () => {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
-  // You may wish to split these into two
   const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== null) formDataToSend.append(key, value as any);
-      });
+      let imageUrl = "";
+      // Upload image to a third-party service like Cloudinary
+      if (formData.image) {
+        const imageData = new FormData();
+        imageData.append("file", formData.image);
+        imageData.append("upload_preset", "lost_and_found");
+        const cloudinaryResponse = await axios.post(
+          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+          imageData
+        );
+        imageUrl = cloudinaryResponse.data.secure_url;
+      }
 
-      await axios.post("http://localhost:5000/lost", formDataToSend, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      // Prepare data to send to your own server
+      const itemData = {
+        name: formData.name,
+        color: formData.color,
+        brand: formData.brand,
+        uniqueId: formData.uniqueId,
+        dateLost: formData.dateLost,
+        timeLost: formData.timeLost,
+        location: formData.location,
+        category: formData.category,
+        phone: formData.phone,
+        email: formData.email,
+        imageUrl,
+      };
+
+      await axios.post("http://localhost:5000/lost", itemData);
 
       alert("Lost item report submitted successfully!");
-      setFormData({
-        name: "",
-        color: "",
-        brand: "",
-        uniqueId: "",
-        dateLost: "",
-        timeLost: "",
-        image: null,
-        imagePreview: null,
-        location: "",
-        category: "Bag",
-        phone: "",
-        email: "",
-      });
-      setStep(1);
     } catch (error) {
       console.error("Error submitting lost report:", error);
       alert("Error submitting lost report. Please try again.");
     }
   };
+
   const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      const formDataToSend = new FormData();
-      Object.entries(foundData).forEach(([key, value]) => {
-        if (value !== null) formDataToSend.append(key, value as any);
-      });
+      let imageUrl = "";
+      if (foundData.image) {
+        const imageData = new FormData();
+        imageData.append("file", foundData.image);
+        imageData.append("upload_preset", "lost_and_found");
+        const cloudinaryResponse = await axios.post(
+          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+          imageData
+        );
+        imageUrl = cloudinaryResponse.data.secure_url;
+      }
 
-      await axios.post("http://localhost:5000/found", formDataToSend, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const itemData = {
+        name: foundData.name,
+        color: foundData.color,
+        brand: foundData.brand,
+        uniqueId: foundData.uniqueId,
+        dateFound: foundData.dateFound,
+        location: foundData.location,
+        category: foundData.category,
+        phone: foundData.phone,
+        email: foundData.email,
+        imageUrl,
+      };
+
+      await axios.post("http://localhost:5000/found", itemData);
 
       alert("Found item report submitted successfully!");
-      setFoundData({
-        name: "",
-        color: "",
-        brand: "",
-        uniqueId: "",
-        dateFound: "",
-        image: null,
-        imagePreview: null,
-        location: "",
-        category: "",
-        phone: "",
-        email: "",
-      });
-      setStep(1);
     } catch (error) {
       console.error("Error submitting found report:", error);
       alert("Error submitting found report. Please try again.");
@@ -228,7 +238,6 @@ const Report: React.FC = () => {
 
   return (
     <div>
-      {/* Hero Section */}
       <div className="report-hero-section">
         <div className="report-hero-search">
           <FaSearch size={30} color="#4f772d" />
@@ -408,7 +417,6 @@ const Report: React.FC = () => {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    {/* Use FoundData state for geolocation */}
                     <LocationMarker
                       setFormData={setFoundData}
                       formData={foundData}
@@ -486,7 +494,6 @@ const Report: React.FC = () => {
         </div>
       )}
 
-      {/* Lost Section */}
       {selectedOption === "lost" && (
         <div className="file-report">
           <div className="progress-bar">
@@ -642,7 +649,7 @@ const Report: React.FC = () => {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    {/* Use LostData state for geolocation */}
+
                     <LocationMarker
                       setFormData={setFormData}
                       formData={formData}
