@@ -147,53 +147,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/lost", upload.single("image"), async (req, res) => {
-  try {
-    const {
-      name,
-      color,
-      brand,
-      uniqueId,
-      dateLost,
-      timeLost,
-      location,
-      category,
-      phone,
-      email,
-    } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-
-    const lostItem = new LostItem({
-      name,
-      color,
-      brand,
-      uniqueId,
-      dateLost,
-      timeLost,
-      imageUrl,
-      location,
-      category,
-      phone,
-      email,
-    });
-
-    await lostItem.save();
-    res.status(201).json(lostItem);
-  } catch (error: any) {
-    console.error("Error saving lost item:", error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-app.get("/lost", async (req, res) => {
-  try {
-    const items = await LostItem.find().sort({ createdAt: -1 });
-    res.status(200).json(items);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+// Post lost item without multer (assuming image is already uploaded to cloudinary)
 app.post("/lost", async (req, res) => {
   try {
     const {
@@ -232,6 +186,17 @@ app.post("/lost", async (req, res) => {
   }
 });
 
+// Get all lost items
+app.get("/lost", async (req, res) => {
+  try {
+    const items = await LostItem.find().sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Post found item without multer
 app.post("/found", async (req, res) => {
   try {
     const {
@@ -267,6 +232,17 @@ app.post("/found", async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+// Get all found items
+app.get("/found", async (req, res) => {
+  try {
+    const items = await FoundItem.find().sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

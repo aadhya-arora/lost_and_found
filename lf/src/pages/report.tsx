@@ -59,12 +59,25 @@ function LocationMarker<T extends { location: string }>({
   const [position, setPosition] = useState<LatLng | null>(null);
 
   useMapEvents({
-    click(e) {
+    async click(e) {
       setPosition(e.latlng);
-      setFormData({
-        ...formData,
-        location: `${e.latlng.lat}, ${e.latlng.lng}`,
-      });
+
+      try {
+        const response = await axios.get(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}`
+        );
+        const address = response.data.display_name;
+        setFormData({
+          ...formData,
+          location: address,
+        });
+      } catch (error) {
+        console.error("Error fetching location name:", error);
+        setFormData({
+          ...formData,
+          location: `${e.latlng.lat}, ${e.latlng.lng}`,
+        });
+      }
     },
   });
 
@@ -163,7 +176,6 @@ const Report: React.FC = () => {
     e.preventDefault();
     try {
       let imageUrl = "";
-      // Upload image to a third-party service like Cloudinary
       if (formData.image) {
         const imageData = new FormData();
         imageData.append("file", formData.image);
@@ -175,7 +187,6 @@ const Report: React.FC = () => {
         imageUrl = cloudinaryResponse.data.secure_url;
       }
 
-      // Prepare data to send to your own server
       const itemData = {
         name: formData.name,
         color: formData.color,
@@ -298,7 +309,6 @@ const Report: React.FC = () => {
             >
               {step === 1 && (
                 <>
-                  {/* ...Other Inputs... */}
                   <label htmlFor="name" className="label-headings">
                     What did you find?
                   </label>
@@ -369,7 +379,6 @@ const Report: React.FC = () => {
                   <label htmlFor="image" className="label-headings">
                     Upload Image
                   </label>
-                  {/* hide Browse if image is present */}
                   {!foundData.imagePreview && (
                     <div className="file-input-wrapper">
                       <button type="button" className="custom-file-button">

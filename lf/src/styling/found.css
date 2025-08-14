@@ -1,0 +1,169 @@
+/* Styling for the overall found.tsx page */
+.found-container {
+  background: linear-gradient(135deg, #ecf39e 0%, #ffffff 100%);
+  padding: 40px 20px;
+  min-height: 100vh;
+}
+
+/* Styling for the hero section */
+.found-hero-section {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.found-hero-header {
+  font-size: 3rem;
+  color: #132a13;
+  margin-bottom: 10px;
+}
+
+.found-hero-subline {
+  font-size: 1.2rem;
+  color: #4f772d;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Grid layout for lost and found items */
+.items-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Styling for individual sections (Lost and Found) */
+.items-lost,
+.items-found {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-heading {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #4f772d;
+}
+
+.lost-heading {
+  color: #132a13;
+}
+
+.found-heading {
+  color: #4f772d;
+}
+
+.no-items-message {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+/* List of items */
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s;
+}
+
+.lost-card {
+  background-color: #f7f9f2;
+  border: 1px solid #c8d3bb;
+}
+
+.found-card {
+  background-color: #e9f5db;
+  border: 1px solid #b7c7a8;
+}
+
+.item-card:hover {
+  transform: translateY(-5px);
+}
+
+.item-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.item-details {
+  flex-grow: 1;
+}
+
+.item-name {
+  font-size: 1.5rem;
+  color: #132a13;
+  margin-bottom: 5px;
+}
+
+.item-details p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.item-details strong {
+  color: #4f772d;
+}
+
+/* Styling for the action buttons */
+.report-found-button,
+.claim-button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.report-found-button {
+  background-color: #4f772d;
+  color: white;
+}
+
+.report-found-button:hover {
+  background-color: #3b5a22;
+}
+
+.claim-button {
+  background-color: #132a13;
+  color: white;
+}
+
+.claim-button:hover {
+  background-color: #0d1e0d;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .found-hero-header {
+    font-size: 2.5rem;
+  }
+
+  .item-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
