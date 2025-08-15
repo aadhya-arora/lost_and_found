@@ -84,40 +84,58 @@ function LocationMarker<T extends { location: string }>({
   return position ? <Marker position={position} /> : null;
 }
 
+// ------------------
+// Initial States
+// ------------------
+const initialLostForm: FormDataType = {
+  name: "",
+  color: "",
+  brand: "",
+  uniqueId: "",
+  dateLost: "",
+  timeLost: "",
+  image: null,
+  imagePreview: null,
+  location: "",
+  category: "Accessories",
+  phone: "",
+  email: "",
+};
+
+const initialFoundForm: FoundDataType = {
+  name: "",
+  color: "",
+  brand: "",
+  uniqueId: "",
+  dateFound: "",
+  image: null,
+  imagePreview: null,
+  location: "",
+  category: "Accessories",
+  phone: "",
+  email: "",
+};
+
 const Report: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [selectedOption, setSelectedOption] = useState<"lost" | "found" | null>(
     null
   );
 
-  const [formData, setFormData] = useState<FormDataType>({
-    name: "",
-    color: "",
-    brand: "",
-    uniqueId: "",
-    dateLost: "",
-    timeLost: "",
-    image: null,
-    imagePreview: null,
-    location: "",
-    category: "Bag",
-    phone: "",
-    email: "",
-  });
+  const [formData, setFormData] = useState<FormDataType>(initialLostForm);
+  const [foundData, setFoundData] = useState<FoundDataType>(initialFoundForm);
 
-  const [foundData, setFoundData] = useState<FoundDataType>({
-    name: "",
-    color: "",
-    brand: "",
-    uniqueId: "",
-    dateFound: "",
-    image: null,
-    imagePreview: null,
-    location: "",
-    category: "",
-    phone: "",
-    email: "",
-  });
+  const getCategory = async (itemName: string): Promise<string> => {
+    try {
+      const res = await axios.post("http://localhost:5001/predict-category", {
+        text: itemName,
+      });
+      return res.data.category;
+    } catch (err) {
+      console.error("Error predicting category:", err);
+      return "Accessories"; // fallback
+    }
+  };
 
   // Remove handlers
   const handleRemoveImageLost = () => {
@@ -137,10 +155,11 @@ const Report: React.FC = () => {
   };
 
   // Change handlers
-  const handleChangeLost = (
+  const handleChangeLost = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, files } = e.target as HTMLInputElement;
+
     if (files && files.length > 0) {
       const file = files[0];
       setFormData((prev) => ({
@@ -149,14 +168,38 @@ const Report: React.FC = () => {
         imagePreview: URL.createObjectURL(file),
       }));
     } else {
-      setFormData((prev) => ({ ...prev, [id]: value }));
+      if (id === "name") {
+        let predictedCategory = await getCategory(value);
+
+        if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(value)) {
+          predictedCategory = "Electronics";
+        }
+        if (/phone|mobile|iphone|samsung|oneplus/i.test(value)) {
+          predictedCategory = "Electronics";
+        }
+        if (/bag|wallet|purse/i.test(value)) {
+          predictedCategory = "Accessories";
+        }
+
+        setFormData((prev) => ({
+          ...prev,
+          [id]: value,
+          category: predictedCategory,
+        }));
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          [id]: value,
+        }));
+      }
     }
   };
 
-  const handleChangeFound = (
+  const handleChangeFound = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, files } = e.target as HTMLInputElement;
+
     if (files && files.length > 0) {
       const file = files[0];
       setFoundData((prev) => ({
@@ -165,13 +208,39 @@ const Report: React.FC = () => {
         imagePreview: URL.createObjectURL(file),
       }));
     } else {
-      setFoundData((prev) => ({ ...prev, [id]: value }));
+      if (id === "name") {
+        let predictedCategory = await getCategory(value);
+
+        if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(value)) {
+          predictedCategory = "Electronics";
+        }
+        if (/phone|mobile|iphone|samsung|oneplus/i.test(value)) {
+          predictedCategory = "Electronics";
+        }
+        if (/bag|wallet|purse/i.test(value)) {
+          predictedCategory = "Accessories";
+        }
+
+        setFoundData((prev) => ({
+          ...prev,
+          [id]: value,
+          category: predictedCategory,
+        }));
+      } else {
+        setFoundData((prev) => ({
+          ...prev,
+          [id]: value,
+        }));
+      }
     }
   };
 
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
+  // ------------------------
+  // Lost Submit
+  // ------------------------
   const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -187,29 +256,25 @@ const Report: React.FC = () => {
         imageUrl = cloudinaryResponse.data.secure_url;
       }
 
-      const itemData = {
-        name: formData.name,
-        color: formData.color,
-        brand: formData.brand,
-        uniqueId: formData.uniqueId,
-        dateLost: formData.dateLost,
-        timeLost: formData.timeLost,
-        location: formData.location,
-        category: formData.category,
-        phone: formData.phone,
-        email: formData.email,
-        imageUrl,
-      };
+      const itemData = { ...formData, imageUrl };
 
       await axios.post("http://localhost:5000/lost", itemData);
 
       alert("Lost item report submitted successfully!");
+
+      // ✅ Reset safely
+      setFormData(initialLostForm);
+      setStep(1);
+      setSelectedOption(null);
     } catch (error) {
       console.error("Error submitting lost report:", error);
       alert("Error submitting lost report. Please try again.");
     }
   };
 
+  // ------------------------
+  // Found Submit
+  // ------------------------
   const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -225,28 +290,25 @@ const Report: React.FC = () => {
         imageUrl = cloudinaryResponse.data.secure_url;
       }
 
-      const itemData = {
-        name: foundData.name,
-        color: foundData.color,
-        brand: foundData.brand,
-        uniqueId: foundData.uniqueId,
-        dateFound: foundData.dateFound,
-        location: foundData.location,
-        category: foundData.category,
-        phone: foundData.phone,
-        email: foundData.email,
-        imageUrl,
-      };
+      const itemData = { ...foundData, imageUrl };
 
       await axios.post("http://localhost:5000/found", itemData);
 
       alert("Found item report submitted successfully!");
+
+      // ✅ Reset safely
+      setFoundData(initialFoundForm);
+      setStep(1);
+      setSelectedOption(null);
     } catch (error) {
       console.error("Error submitting found report:", error);
       alert("Error submitting found report. Please try again.");
     }
   };
 
+  // ------------------------
+  // UI Render
+  // ------------------------
   return (
     <div>
       <div className="report-hero-section">
@@ -282,8 +344,6 @@ const Report: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Found Section */}
       {selectedOption === "found" && (
         <div className="found-report">
           <div className="progress-bar">
@@ -736,6 +796,7 @@ const Report: React.FC = () => {
           </div>
         </div>
       )}
+
       <Footer />
     </div>
   );

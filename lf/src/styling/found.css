@@ -151,6 +151,10 @@
   background-color: #0d1e0d;
 }
 
+.category-heading {
+  font-size: 2rem;
+}
+
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
   .items-grid {

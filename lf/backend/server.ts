@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-import multer from "multer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,21 +36,6 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-
-const upload = multer({ storage: storage });
 
 mongoose
   .connect(process.env.MONGO_URI as string)
@@ -189,14 +173,18 @@ app.post("/lost", async (req, res) => {
 // Get all lost items
 app.get("/lost", async (req, res) => {
   try {
-    const items = await LostItem.find().sort({ createdAt: -1 });
+    const { category } = req.query;
+    let query = {};
+    if (category) {
+      query = { category: category as string };
+    }
+    const items = await LostItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Post found item without multer
 app.post("/found", async (req, res) => {
   try {
     const {
@@ -236,7 +224,12 @@ app.post("/found", async (req, res) => {
 // Get all found items
 app.get("/found", async (req, res) => {
   try {
-    const items = await FoundItem.find().sort({ createdAt: -1 });
+    const { category } = req.query;
+    let query = {};
+    if (category) {
+      query = { category: category as string };
+    }
+    const items = await FoundItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
