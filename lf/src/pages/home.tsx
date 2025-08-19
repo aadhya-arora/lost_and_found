@@ -1,36 +1,50 @@
 import "../styling/home.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaRegEdit, FaBell, FaHandshake } from "react-icons/fa";
 import { FaShieldAlt, FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
 import { FaQuestionCircle } from "react-icons/fa";
 import logo from "../assets/logo.png";
 import Footer from "../components/footer";
+
 const Home = () => {
   const [showMoreFAQs, setShowMoreFAQs] = useState(false);
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
 
-  const posts = [
-    {
-      id: 1,
-      image: "https://via.placeholder.com/150", // replace with real images
-      title: "Lost: Black Wallet",
-      location: "Connaught Place, Delhi",
-      date: "27 June 2025",
-    },
-    {
-      id: 2,
-      image: "https://via.placeholder.com/150",
-      title: "Found: Golden Retriever",
-      location: "Sector 62, Noida",
-      date: "25 June 2025",
-    },
-    {
-      id: 3,
-      image: "https://via.placeholder.com/150",
-      title: "Lost: Laptop Bag",
-      location: "MG Road, Bangalore",
-      date: "24 June 2025",
-    },
-  ];
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const [lostRes, foundRes] = await Promise.all([
+          fetch("http://localhost:5000/lost"),
+          fetch("http://localhost:5000/found"),
+        ]);
+
+        const lostData = await lostRes.json();
+        const foundData = await foundRes.json();
+
+        const lostWithType = lostData.map((item: any) => ({
+          ...item,
+          type: "lost",
+          date: item.dateLost,
+        }));
+
+        const foundWithType = foundData.map((item: any) => ({
+          ...item,
+          type: "found",
+          date: item.dateFound,
+        }));
+
+        const allPosts = [...lostWithType, ...foundWithType].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+
+        setLatestPosts(allPosts.slice(0, 4));
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
 
   return (
     <div>
@@ -44,7 +58,7 @@ const Home = () => {
           </div>
         </div>
         <div className="right-side">
-          <img src={logo} className="hero-image"></img>
+          <img src={logo} className="hero-image" alt="Findify Logo" />
         </div>
       </div>
       <div className="working">
@@ -67,63 +81,33 @@ const Home = () => {
           </div>
         </div>
       </div>
-      <div className="categories-section">
-        <h2 className="category-heading">Search by Category</h2>
-        <div className="category">
-          <div className="electronics-card">
-            <div className="electronic-inner">
-              <div className="electronic-front"></div>
-              <div className="electronic-back">
-                <p className="electronic-info">Electronics</p>
-              </div>
-            </div>
-          </div>
-          <div className="bags-card">
-            <div className="bags-inner">
-              <div className="bags-front"></div>
-              <div className="bags-back">
-                <p className="bags-info">Bags & Wallet</p>
-              </div>
-            </div>
-          </div>
-          <div className="stationary-card">
-            <div className="stationary-inner">
-              <div className="stationary-front"></div>
-              <div className="stationary-back">
-                <p className="stationary-info">Stationary</p>
-              </div>
-            </div>
-          </div>
-          <div className="documents-card">
-            <div className="documents-inner">
-              <div className="documents-front"></div>
-              <div className="documents-back">
-                <p className="documents-info">Documents</p>
-              </div>
-            </div>
-          </div>
-          <div className="accessory-card">
-            <div className="accessory-inner">
-              <div className="accessory-front"></div>
-              <div className="accessory-back">
-                <p className="accessory-info">Accessories</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       <div className="latest-posts-section">
         <h2>Latest Lost and Found</h2>
         <div className="posts-grid">
-          {posts.map((post) => (
-            <div key={post.id} className="post-card">
-              <img src={post.image} alt={post.title} className="post-image" />
-              <h3>{post.title}</h3>
-              <p className="location">{post.location}</p>
-              <p className="date">{post.date}</p>
-              <button className="details-btn">View Details</button>
-            </div>
-          ))}
+          {latestPosts.length === 0 ? (
+            <p>No recent posts available.</p>
+          ) : (
+            latestPosts.map((post) => (
+              <div key={post._id} className="post-card">
+                <img
+                  src={post.imageUrl || "https://via.placeholder.com/150"}
+                  alt={post.name}
+                  className="post-image"
+                />
+
+                <h3>
+                  {post.type}: {post.title}
+                </h3>
+
+                <p className="product-name">{post.name}</p>
+                <p className="location">{post.location}</p>
+                <p className="date">
+                  {post.date ? new Date(post.date).toDateString() : "No date"}
+                </p>
+                <button className="details-btn">View Details</button>
+              </div>
+            ))
+          )}
         </div>
       </div>
       <div className="safety-tips-section">
@@ -145,7 +129,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-
       <div className="faq-section">
         <h2>Frequently Asked Questions</h2>
         <div className="faq-list">
@@ -186,8 +169,10 @@ const Home = () => {
           {showMoreFAQs ? "Show less ←" : "View all FAQs →"}
         </button>
       </div>
+
       <Footer />
     </div>
   );
 };
+
 export default Home;
