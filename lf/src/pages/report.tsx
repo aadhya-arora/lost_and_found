@@ -1,5 +1,5 @@
 import "../styling/report.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaSearch } from "react-icons/fa";
 import { HiOutlineExclamation, HiOutlineCheckCircle } from "react-icons/hi";
 import "leaflet/dist/leaflet.css";
@@ -64,12 +64,27 @@ function LocationMarker<T extends { location: string }>({
 
       try {
         const response = await axios.get(
-          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}`
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`
         );
-        const address = response.data.display_name;
+
+        const data = response.data;
+        const address = response.data.address;
+        const detailedAddress = [
+          address.building,
+          address.amenity,
+          address.neighbourhood,
+          address.suburb,
+          address.village,
+          address.town,
+          address.city,
+          address.state,
+        ]
+          .filter(Boolean)
+          .join(", ");
+
         setFormData({
           ...formData,
-          location: address,
+          location: detailedAddress || response.data.display_name,
         });
       } catch (error) {
         console.error("Error fetching location name:", error);
@@ -125,6 +140,52 @@ const Report: React.FC = () => {
   const [formData, setFormData] = useState<FormDataType>(initialLostForm);
   const [foundData, setFoundData] = useState<FoundDataType>(initialFoundForm);
 
+  useEffect(() => {
+    const predictCategory = async () => {
+      let predictedCategory = await getCategory(formData.name);
+
+      if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(formData.name)) {
+        predictedCategory = "Electronics";
+      }
+      if (/phone|mobile|iphone|samsung|oneplus/i.test(formData.name)) {
+        predictedCategory = "Electronics";
+      }
+      if (/bag|wallet|purse/i.test(formData.name)) {
+        predictedCategory = "Accessories";
+      }
+
+      setFormData((prev) => ({ ...prev, category: predictedCategory }));
+    };
+
+    if (selectedOption === "lost" && formData.name) {
+      const timeout = setTimeout(predictCategory, 500); // Debounce the call
+      return () => clearTimeout(timeout);
+    }
+  }, [formData.name, selectedOption]);
+
+  useEffect(() => {
+    const predictCategory = async () => {
+      let predictedCategory = await getCategory(foundData.name);
+
+      if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(foundData.name)) {
+        predictedCategory = "Electronics";
+      }
+      if (/phone|mobile|iphone|samsung|oneplus/i.test(foundData.name)) {
+        predictedCategory = "Electronics";
+      }
+      if (/bag|wallet|purse/i.test(foundData.name)) {
+        predictedCategory = "Accessories";
+      }
+
+      setFoundData((prev) => ({ ...prev, category: predictedCategory }));
+    };
+
+    if (selectedOption === "found" && foundData.name) {
+      const timeout = setTimeout(predictCategory, 500); // Debounce the call
+      return () => clearTimeout(timeout);
+    }
+  }, [foundData.name, selectedOption]);
+
   const getCategory = async (itemName: string): Promise<string> => {
     try {
       const res = await axios.post("http://localhost:5001/predict-category", {
@@ -155,7 +216,7 @@ const Report: React.FC = () => {
   };
 
   // Change handlers
-  const handleChangeLost = async (
+  const handleChangeLost = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, files } = e.target as HTMLInputElement;
@@ -168,34 +229,14 @@ const Report: React.FC = () => {
         imagePreview: URL.createObjectURL(file),
       }));
     } else {
-      if (id === "name") {
-        let predictedCategory = await getCategory(value);
-
-        if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(value)) {
-          predictedCategory = "Electronics";
-        }
-        if (/phone|mobile|iphone|samsung|oneplus/i.test(value)) {
-          predictedCategory = "Electronics";
-        }
-        if (/bag|wallet|purse/i.test(value)) {
-          predictedCategory = "Accessories";
-        }
-
-        setFormData((prev) => ({
-          ...prev,
-          [id]: value,
-          category: predictedCategory,
-        }));
-      } else {
-        setFormData((prev) => ({
-          ...prev,
-          [id]: value,
-        }));
-      }
+      setFormData((prev) => ({
+        ...prev,
+        [id]: value,
+      }));
     }
   };
 
-  const handleChangeFound = async (
+  const handleChangeFound = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { id, value, files } = e.target as HTMLInputElement;
@@ -208,30 +249,10 @@ const Report: React.FC = () => {
         imagePreview: URL.createObjectURL(file),
       }));
     } else {
-      if (id === "name") {
-        let predictedCategory = await getCategory(value);
-
-        if (/laptop|notebook|macbook|dell|hp|lenovo/i.test(value)) {
-          predictedCategory = "Electronics";
-        }
-        if (/phone|mobile|iphone|samsung|oneplus/i.test(value)) {
-          predictedCategory = "Electronics";
-        }
-        if (/bag|wallet|purse/i.test(value)) {
-          predictedCategory = "Accessories";
-        }
-
-        setFoundData((prev) => ({
-          ...prev,
-          [id]: value,
-          category: predictedCategory,
-        }));
-      } else {
-        setFoundData((prev) => ({
-          ...prev,
-          [id]: value,
-        }));
-      }
+      setFoundData((prev) => ({
+        ...prev,
+        [id]: value,
+      }));
     }
   };
 

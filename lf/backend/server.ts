@@ -8,7 +8,33 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+const candidateEnvPaths = [
+  path.resolve(__dirname, "../.env"),
+  path.resolve(__dirname, "../../.env"),
+  path.resolve(process.cwd(), ".env"),
+];
+
+let dotenvLoadedFrom: string | null = null;
+for (const candidate of candidateEnvPaths) {
+  try {
+    const result = dotenv.config({ path: candidate });
+    if (result.parsed && Object.keys(result.parsed).length > 0) {
+      dotenvLoadedFrom = candidate;
+      console.log(`[dotenv] loaded env from: ${candidate}`);
+      break;
+    }
+  } catch (e) {}
+}
+if (!dotenvLoadedFrom) {
+  // final fallback: default behavior (looks in process.cwd())
+  const result = dotenv.config();
+  if (result.parsed && Object.keys(result.parsed).length > 0) {
+    dotenvLoadedFrom = ".env (default)";
+    console.log(`[dotenv] loaded env from default .env`);
+  } else {
+    console.log("[dotenv] no .env file loaded (none found or empty)");
+  }
+}
 
 import SignUp from "./auth.js";
 import cookieParser from "cookie-parser";
@@ -37,10 +63,33 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Validate required environment variables before attempting DB connection.
+const mongoUri = process.env.MONGO_URI;
+if (!mongoUri || typeof mongoUri !== "string" || mongoUri.trim() === "") {
+  console.error(
+    "[env] MONGO_URI is missing or empty. Checked paths:",
+    candidateEnvPaths
+  );
+  console.error(
+    "[env] Please set MONGO_URI in your .env (or environment) before starting the server."
+  );
+  // Fail fast so the app doesn't run in a broken state.
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.warn(
+    "[env] JWT_SECRET is not set. Token signing/verifying may fail."
+  );
+}
+
 mongoose
-  .connect(process.env.MONGO_URI as string)
+  .connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true } as any)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+    // Keep process alive so errors are visible; alternatively exit if desired.
+  });
 
 app.post("/signUp", (req, res) => {
   console.log("Received signup request. Body:", req.body);

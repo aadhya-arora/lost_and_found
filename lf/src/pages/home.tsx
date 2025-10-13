@@ -1,6 +1,7 @@
 import "../styling/home.css";
 import { useState, useEffect } from "react";
 import { FaRegEdit, FaBell, FaHandshake } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import { FaShieldAlt, FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
 import { FaQuestionCircle } from "react-icons/fa";
 import logo from "../assets/logo.png";
@@ -45,6 +46,7 @@ const Home = () => {
 
     fetchPosts();
   }, []);
+  const navigate = useNavigate();
 
   return (
     <div>
@@ -53,8 +55,12 @@ const Home = () => {
           <h1 className="web-name">Findify</h1>
           <p className="web-line">Where lost things find their way home</p>
           <div className="btns">
-            <button className="find"> Find Your Lost Item</button>
-            <button className="report"> Report an Item</button>
+            <button className="find" onClick={() => navigate("/found")}>
+              Find Your Lost Item
+            </button>
+            <button className="report" onClick={() => navigate("/report")}>
+              Report an Item
+            </button>
           </div>
         </div>
         <div className="right-side">
