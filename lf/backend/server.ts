@@ -4,6 +4,12 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import FoundItem from "./foundItem.js";
+import LostItem from "./lostItem.js";
+import SignUp from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -26,7 +32,6 @@ for (const candidate of candidateEnvPaths) {
   } catch (e) {}
 }
 if (!dotenvLoadedFrom) {
-  // final fallback: default behavior (looks in process.cwd())
   const result = dotenv.config();
   if (result.parsed && Object.keys(result.parsed).length > 0) {
     dotenvLoadedFrom = ".env (default)";
@@ -35,13 +40,6 @@ if (!dotenvLoadedFrom) {
     console.log("[dotenv] no .env file loaded (none found or empty)");
   }
 }
-
-import SignUp from "./auth.js";
-import cookieParser from "cookie-parser";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-import FoundItem from "./foundItem.js";
-import LostItem from "./lostItem.js";
 
 const PORT = process.env.PORT || 5000;
 const jwtSecret = process.env.JWT_SECRET!;
@@ -63,7 +61,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// Validate required environment variables before attempting DB connection.
 const mongoUri = process.env.MONGO_URI;
 if (!mongoUri || typeof mongoUri !== "string" || mongoUri.trim() === "") {
   console.error(
@@ -73,7 +70,6 @@ if (!mongoUri || typeof mongoUri !== "string" || mongoUri.trim() === "") {
   console.error(
     "[env] Please set MONGO_URI in your .env (or environment) before starting the server."
   );
-  // Fail fast so the app doesn't run in a broken state.
   process.exit(1);
 }
 
@@ -88,8 +84,24 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => {
     console.error("MongoDB connection error:", err);
-    // Keep process alive so errors are visible; alternatively exit if desired.
   });
+
+// Auth middleware to extract user ID from token
+const authenticateToken = (req: any, res: any, next: any) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ message: "Authentication failed: No token provided." });
+  }
+
+  jwt.verify(token, jwtSecret, (err: any, user: any) => {
+    if (err) {
+      return res.status(403).json({ message: "Authentication failed: Invalid token." });
+    }
+    req.userId = user.id;
+    next();
+  });
+};
 
 app.post("/signUp", (req, res) => {
   console.log("Received signup request. Body:", req.body);
@@ -126,7 +138,7 @@ app.post("/signUp", (req, res) => {
         });
         console.log("User created:", createUser);
 
-        let token = jwt.sign({ email }, jwtSecret);
+        let token = jwt.sign({ id: createUser._id, email }, jwtSecret);
         res.cookie("token", token, {
           httpOnly: true,
           secure: false,
@@ -165,7 +177,7 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
     const token = jwt.sign(
-      { email: user.email, username: user.username },
+      { id: user._id, email: user.email, username: user.username },
       jwtSecret
     );
 
@@ -180,8 +192,18 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Post lost item without multer (assuming image is already uploaded to cloudinary)
-app.post("/lost", async (req, res) => {
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.status(200).json({ message: "Logged out successfully" });
+});
+
+// New route to get user status
+app.get("/user-status", authenticateToken, (req: any, res) => {
+  res.status(200).json({ isLoggedIn: true, userId: req.userId });
+});
+
+// Post lost item with userId
+app.post("/lost", authenticateToken, async (req: any, res) => {
   try {
     const {
       name,
@@ -209,6 +231,7 @@ app.post("/lost", async (req, res) => {
       category,
       phone,
       email,
+      userId: req.userId,
     });
 
     await lostItem.save();
@@ -219,7 +242,7 @@ app.post("/lost", async (req, res) => {
   }
 });
 
-// Get all lost items
+// Get all lost items (public, but a separate endpoint can be created for user's own items)
 app.get("/lost", async (req, res) => {
   try {
     const { category } = req.query;
@@ -234,7 +257,18 @@ app.get("/lost", async (req, res) => {
   }
 });
 
-app.post("/found", async (req, res) => {
+// New endpoint to get a user's specific lost items
+app.get("/my-lost-items", authenticateToken, async (req: any, res) => {
+  try {
+    const items = await LostItem.find({ userId: req.userId }).sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Post found item with userId
+app.post("/found", authenticateToken, async (req: any, res) => {
   try {
     const {
       name,
@@ -260,6 +294,7 @@ app.post("/found", async (req, res) => {
       category,
       phone,
       email,
+      userId: req.userId,
     });
 
     await foundItem.save();
@@ -270,7 +305,7 @@ app.post("/found", async (req, res) => {
   }
 });
 
-// Get all found items
+// Get all found items (public)
 app.get("/found", async (req, res) => {
   try {
     const { category } = req.query;
@@ -279,6 +314,16 @@ app.get("/found", async (req, res) => {
       query = { category: category as string };
     }
     const items = await FoundItem.find(query).sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// New endpoint to get a user's specific found items
+app.get("/my-found-items", authenticateToken, async (req: any, res) => {
+  try {
+    const items = await FoundItem.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

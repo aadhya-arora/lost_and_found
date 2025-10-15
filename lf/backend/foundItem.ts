@@ -11,6 +11,7 @@ export interface IFoundItem extends Document {
   category?: string;
   phone: string;
   email: string;
+  userId: mongoose.Schema.Types.ObjectId;
 }
 
 const FoundItemSchema: Schema = new Schema(
@@ -25,6 +26,7 @@ const FoundItemSchema: Schema = new Schema(
     category: { type: String, default: "Bag" },
     phone: { type: String, required: true },
     email: { type: String, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "SignUp" },
   },
   { timestamps: true }
 );

@@ -7,6 +7,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L, { LatLng } from "leaflet";
 import Footer from "../components/footer";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 delete (L.Icon.Default as any).prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -99,9 +100,6 @@ function LocationMarker<T extends { location: string }>({
   return position ? <Marker position={position} /> : null;
 }
 
-// ------------------
-// Initial States
-// ------------------
 const initialLostForm: FormDataType = {
   name: "",
   color: "",
@@ -139,6 +137,21 @@ const Report: React.FC = () => {
 
   const [formData, setFormData] = useState<FormDataType>(initialLostForm);
   const [foundData, setFoundData] = useState<FoundDataType>(initialFoundForm);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        await axios.get("http://localhost:5000/user-status", {
+          withCredentials: true,
+        });
+      } catch (err) {
+        alert("You must be logged in to report an item.");
+        navigate("/auth");
+      }
+    };
+    checkLoginStatus();
+  }, [navigate]);
 
   useEffect(() => {
     const predictCategory = async () => {
@@ -158,7 +171,7 @@ const Report: React.FC = () => {
     };
 
     if (selectedOption === "lost" && formData.name) {
-      const timeout = setTimeout(predictCategory, 500); // Debounce the call
+      const timeout = setTimeout(predictCategory, 500);
       return () => clearTimeout(timeout);
     }
   }, [formData.name, selectedOption]);
@@ -181,7 +194,7 @@ const Report: React.FC = () => {
     };
 
     if (selectedOption === "found" && foundData.name) {
-      const timeout = setTimeout(predictCategory, 500); // Debounce the call
+      const timeout = setTimeout(predictCategory, 500);
       return () => clearTimeout(timeout);
     }
   }, [foundData.name, selectedOption]);
@@ -194,11 +207,10 @@ const Report: React.FC = () => {
       return res.data.category;
     } catch (err) {
       console.error("Error predicting category:", err);
-      return "Accessories"; // fallback
+      return "Accessories";
     }
   };
 
-  // Remove handlers
   const handleRemoveImageLost = () => {
     setFormData((prev) => ({
       ...prev,
@@ -215,7 +227,6 @@ const Report: React.FC = () => {
     }));
   };
 
-  // Change handlers
   const handleChangeLost = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -259,9 +270,6 @@ const Report: React.FC = () => {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
-  // ------------------------
-  // Lost Submit
-  // ------------------------
   const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -279,11 +287,12 @@ const Report: React.FC = () => {
 
       const itemData = { ...formData, imageUrl };
 
-      await axios.post("http://localhost:5000/lost", itemData);
+      await axios.post("http://localhost:5000/lost", itemData, {
+        withCredentials: true,
+      });
 
       alert("Lost item report submitted successfully!");
 
-      // ✅ Reset safely
       setFormData(initialLostForm);
       setStep(1);
       setSelectedOption(null);
@@ -293,9 +302,6 @@ const Report: React.FC = () => {
     }
   };
 
-  // ------------------------
-  // Found Submit
-  // ------------------------
   const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -313,11 +319,12 @@ const Report: React.FC = () => {
 
       const itemData = { ...foundData, imageUrl };
 
-      await axios.post("http://localhost:5000/found", itemData);
+      await axios.post("http://localhost:5000/found", itemData, {
+        withCredentials: true,
+      });
 
       alert("Found item report submitted successfully!");
 
-      // ✅ Reset safely
       setFoundData(initialFoundForm);
       setStep(1);
       setSelectedOption(null);
@@ -327,9 +334,6 @@ const Report: React.FC = () => {
     }
   };
 
-  // ------------------------
-  // UI Render
-  // ------------------------
   return (
     <div>
       <div className="report-hero-section">

@@ -110,7 +110,7 @@ const Home = () => {
                 <p className="date">
                   {post.date ? new Date(post.date).toDateString() : "No date"}
                 </p>
-                <button className="details-btn">View Details</button>
+                <button className="details-btn" onClick={() => navigate("/found")} >View Details</button>
               </div>
             ))
           )}
@@ -138,30 +138,30 @@ const Home = () => {
       <div className="faq-section">
         <h2>Frequently Asked Questions</h2>
         <div className="faq-list">
-          <div className="faq-item">
+          <div className="faq-item" onClick={() => navigate("/faq")}>
             <FaQuestionCircle size={30} color="#4f772d" />
             <p>How do I post a found item?</p>
           </div>
-          <div className="faq-item">
+          <div className="faq-item" onClick={() => navigate("/faq")}>
             <FaQuestionCircle size={30} color="#4f772d" />
             <p>What happens after I report a lost item?</p>
           </div>
-          <div className="faq-item">
+          <div className="faq-item" onClick={() => navigate("/faq")}>
             <FaQuestionCircle size={30} color="#4f772d" />
             <p>Is it free to use?</p>
           </div>
 
           {showMoreFAQs && (
             <>
-              <div className="faq-item">
+              <div className="faq-item" onClick={() => navigate("/faq")}>
                 <FaQuestionCircle size={30} color="#4f772d" />
                 <p>How can I contact the finder safely?</p>
               </div>
-              <div className="faq-item">
+              <div className="faq-item" onClick={() => navigate("/faq")}>
                 <FaQuestionCircle size={30} color="#4f772d" />
                 <p>Can I edit or delete my post later?</p>
               </div>
-              <div className="faq-item">
+              <div className="faq-item" onClick={() => navigate("/faq")}>
                 <FaQuestionCircle size={30} color="#4f772d" />
                 <p>Do I need to create an account to post?</p>
               </div>
