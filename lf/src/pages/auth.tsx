@@ -1,61 +1,54 @@
 import "../styling/auth.css";
 import { useState } from "react";
-interface Signupdata {
+
+interface SignupData {
   username?: string;
   email?: string;
   password?: string;
 }
-interface Logindata {
+interface LoginData {
   email?: string;
   password?: string;
 }
+
 const Auth = () => {
-  const [signUpData, setSignUpData] = useState<Signupdata>({
+  const [signUpData, setSignUpData] = useState<SignupData>({
     username: "",
     email: "",
     password: "",
   });
-
-  const [loginData, setLoginData] = useState<Logindata>({
+  const [loginData, setLoginData] = useState<LoginData>({
     email: "",
     password: "",
   });
-  const backendUrl = "http://localhost:5000";
 
-  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSignUpData({
-      ...signUpData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLoginData({
-      ...loginData,
-      [e.target.name]: e.target.value,
-    });
-  };
+  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setSignUpData({ ...signUpData, [e.target.name]: e.target.value });
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setLoginData({ ...loginData, [e.target.name]: e.target.value });
 
   const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const res = await fetch(`${backendUrl}/signUp`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(signUpData),
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`SignUp successful`);
-        window.location.href = "/auth";
+        alert("Signup successful!");
+        window.location.href = "/";
       } else {
-        alert("Signup failed:" + data.error);
+        alert("Signup failed: " + (data.error || "Unknown error"));
       }
     } catch (err) {
-      console.error("Signup failed");
-      alert("Server error");
+      console.error("Signup error:", err);
+      alert("Server error during signup");
     }
   };
 
@@ -64,35 +57,28 @@ const Auth = () => {
     try {
       const res = await fetch(`${backendUrl}/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(loginData),
       });
-
-      const text = await res.text();
-      if (res.ok && text !== "You can't login") {
+      const data = await res.json();
+      if (res.ok) {
         alert("Login successful!");
         window.location.href = "/";
       } else {
-        alert("Login failed:" + text);
+        alert("Login failed: " + (data.error || data.message || "Unknown error"));
       }
     } catch (err) {
-      console.error("Login error", err);
-      alert("Server error");
+      console.error("Login error:", err);
+      alert("Server error during login");
     }
   };
 
   return (
     <div className="auth-body">
       <div className="bubble-background">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span>
+        <span></span><span></span><span></span>
       </div>
 
       <div className="auth-section">
@@ -105,14 +91,17 @@ const Auth = () => {
                   <span className="auth-tabs-span">Sign Up</span>
                 </h6>
                 <input
-                  className="auth-checkbox"
                   type="checkbox"
                   id="reg-log"
                   name="reg-log"
+                  className="auth-checkbox"
                 />
                 <label htmlFor="reg-log" className="auth-label"></label>
+
                 <div className="auth-card-3d-wrap">
                   <div className="auth-card-3d-wrapper">
+
+                    {/* LOGIN FORM */}
                     <div className="auth-card-front">
                       <div className="auth-center-wrap">
                         <div className="auth-form-section">
@@ -122,10 +111,10 @@ const Auth = () => {
                               <input
                                 type="email"
                                 name="email"
-                                value={loginData.email}
                                 className="form-style"
                                 placeholder="Your Email"
                                 autoComplete="off"
+                                value={loginData.email}
                                 onChange={handleLoginChange}
                               />
                               <i className="input-icon uil uil-at"></i>
@@ -134,10 +123,10 @@ const Auth = () => {
                               <input
                                 type="password"
                                 name="password"
-                                value={loginData.password}
                                 className="form-style"
                                 placeholder="Your Password"
                                 autoComplete="new-password"
+                                value={loginData.password}
                                 onChange={handleLoginChange}
                               />
                               <i className="input-icon uil uil-lock-alt"></i>
@@ -155,6 +144,7 @@ const Auth = () => {
                       </div>
                     </div>
 
+                    {/* SIGNUP FORM */}
                     <div className="auth-card-back">
                       <div className="auth-center-wrap">
                         <div className="auth-form-section">
@@ -203,8 +193,10 @@ const Auth = () => {
                         </div>
                       </div>
                     </div>
+
                   </div>
                 </div>
+
               </div>
             </div>
           </div>

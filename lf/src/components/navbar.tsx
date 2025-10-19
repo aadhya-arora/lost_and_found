@@ -4,6 +4,8 @@ import "../styling/navbar.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import GoogleTranslateWidget from "../pages/GoogleTranslateWidget";
+
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -29,9 +31,13 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("http://localhost:5000/logout", {}, {
-        withCredentials: true,
-      });
+      await axios.post(
+        "http://localhost:5000/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
       setIsLoggedIn(false);
       navigate("/");
     } catch (err) {
@@ -91,6 +97,11 @@ const Navbar = () => {
                   </li>
                   <li onClick={handleLogout}>
                     <a href="#">Log Out</a>
+                  </li>
+                  <li>
+                    <div className="translate-widget">
+                      <GoogleTranslateWidget />
+                    </div>
                   </li>
                 </>
               ) : (

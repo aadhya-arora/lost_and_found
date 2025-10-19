@@ -1,3 +1,6 @@
+.settings-page{
+  min-height: 80vh;
+}
 .settings-options {
   color: #132a13;
   font-weight: 800;
@@ -266,4 +269,10 @@
 
 .submit-button.cancel:hover {
   background-color: #999;
+}
+
+.translate-widget {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
 }

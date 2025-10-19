@@ -10,10 +10,24 @@ import bcrypt from "bcrypt";
 import FoundItem from "./foundItem.js";
 import LostItem from "./lostItem.js";
 import SignUp from "./auth.js";
+import { CookieOptions } from "express";
+
+const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as
+    | "none"
+    | "lax"
+    | "strict"
+    | boolean
+    | undefined,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ✅ Load .env from possible locations
 const candidateEnvPaths = [
   path.resolve(__dirname, "../.env"),
   path.resolve(__dirname, "../../.env"),
@@ -41,11 +55,22 @@ if (!dotenvLoadedFrom) {
   }
 }
 
+
 const PORT = process.env.PORT || 5000;
 const jwtSecret = process.env.JWT_SECRET!;
+const mongoUri = process.env.MONGO_URI;
+
+if (!mongoUri) {
+  console.error("[env] MONGO_URI is missing. Please add it to your .env file.");
+  process.exit(1);
+}
+if (!jwtSecret) {
+  console.warn("[env] JWT_SECRET is not set. Token signing/verifying may fail.");
+}
 
 const app = express();
 
+// ✅ Middleware
 app.use((req, res, next) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
   next();
@@ -53,7 +78,10 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin:
+      process.env.NODE_ENV === "production"
+        ? "https://your-frontend-domain.com" // 🔥 change to your real domain
+        : "http://localhost:5173",
     credentials: true,
   })
 );
@@ -61,100 +89,55 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri || typeof mongoUri !== "string" || mongoUri.trim() === "") {
-  console.error(
-    "[env] MONGO_URI is missing or empty. Checked paths:",
-    candidateEnvPaths
-  );
-  console.error(
-    "[env] Please set MONGO_URI in your .env (or environment) before starting the server."
-  );
-  process.exit(1);
-}
-
-if (!process.env.JWT_SECRET) {
-  console.warn(
-    "[env] JWT_SECRET is not set. Token signing/verifying may fail."
-  );
-}
 
 mongoose
-  .connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true } as any)
+  .connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  } as any)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => {
-    console.error("MongoDB connection error:", err);
-  });
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-// Auth middleware to extract user ID from token
+// ✅ Auth middleware
 const authenticateToken = (req: any, res: any, next: any) => {
   const token = req.cookies.token;
-
-  if (!token) {
+  if (!token)
     return res.status(401).json({ message: "Authentication failed: No token provided." });
-  }
 
   jwt.verify(token, jwtSecret, (err: any, user: any) => {
-    if (err) {
-      return res.status(403).json({ message: "Authentication failed: Invalid token." });
-    }
+    if (err)
+      return res.status(401).json({ message: "Invalid or expired token." });
     req.userId = user.id;
     next();
   });
 };
 
+// ✅ SIGNUP
 app.post("/signUp", (req, res) => {
-  console.log("Received signup request. Body:", req.body);
+  const { username, email, password } = req.body;
 
-  let { username, email, password } = req.body;
-
-  if (!username || !email || !password) {
-    console.error("Missing required fields for signup.");
-
+  if (!username || !email || !password)
     return res
       .status(400)
       .json({ error: "All fields (username, email, password) are required." });
-  }
 
   bcrypt.genSalt(10, (err, salt) => {
-    if (err) {
-      console.error("Error generating salt:", err);
-      return res
-        .status(500)
-        .json({ error: "Server Error: Salt generation failed." });
-    }
+    if (err) return res.status(500).json({ error: "Salt generation failed." });
     bcrypt.hash(password, salt, async (err, hash) => {
-      if (err) {
-        console.error("Error hashing password:", err);
-        return res
-          .status(500)
-          .json({ error: "Server Error: Password hashing failed." });
-      }
+      if (err) return res.status(500).json({ error: "Password hashing failed." });
       try {
-        let createUser = await SignUp.create({
-          username,
-          email,
-          password: hash,
+        const newUser = await SignUp.create({ username, email, password: hash });
+        const token = jwt.sign({ id: newUser._id, email }, jwtSecret, { expiresIn: "7d" });
+        res.cookie("token", token, cookieOptions);
+        res.status(200).json({
+          message: "Signup successful",
+          user: { username: newUser.username, email: newUser.email },
         });
-        console.log("User created:", createUser);
-
-        let token = jwt.sign({ id: createUser._id, email }, jwtSecret);
-        res.cookie("token", token, {
-          httpOnly: true,
-          secure: false,
-        });
-        console.log("Token generated and cookie set.");
-        res.status(200).json(createUser);
       } catch (error: any) {
-        console.error(
-          "Error during user creation or token signing:",
-          error.message
-        );
-
         if (error.code === 11000) {
-          return res.status(409).json({
-            error: "User with this email or username already exists.",
-          });
+          return res
+            .status(409)
+            .json({ error: "User with this email or username already exists." });
         }
         res.status(500).json({ error: "Server Error: Could not create user." });
       }
@@ -162,47 +145,51 @@ app.post("/signUp", (req, res) => {
   });
 });
 
-app.get("/login", (req, res) => {
-  res.render("login");
+// ✅ LOGIN
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = await SignUp.findOne({ email });
+  if (!user) return res.status(400).send("User not found");
+
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) return res.status(400).send("Invalid password");
+
+  const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "7d" });
+  res.cookie("token", token, cookieOptions);
+  res.json({
+    message: "Login successful",
+    user: { username: user.username, email: user.email },
+  });
 });
 
-app.post("/login", async (req, res) => {
+// ✅ GET CURRENT USER
+app.get("/me", async (req, res) => {
   try {
-    const user = await SignUp.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(400).json({ error: "Email not found" });
-    }
-    const isMatch = await bcrypt.compare(req.body.password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-    const token = jwt.sign(
-      { id: user._id, email: user.email, username: user.username },
-      jwtSecret
-    );
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: "Not authenticated" });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-    });
-    res.status(200).json({ message: "Login Successful" });
+    const decoded = jwt.verify(token, jwtSecret) as { id: string };
+    const user = await SignUp.findById(decoded.id).select("username email");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json(user);
   } catch (err) {
-    console.error("Login error", err);
-    res.status(500).json({ error: "Server Erorr" });
+    res.status(401).json({ error: "Invalid token" });
   }
 });
 
+// ✅ LOGOUT
 app.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-// New route to get user status
+// ✅ USER STATUS CHECK
 app.get("/user-status", authenticateToken, (req: any, res) => {
   res.status(200).json({ isLoggedIn: true, userId: req.userId });
 });
 
-// Post lost item with userId
+// ✅ LOST ITEMS
 app.post("/lost", authenticateToken, async (req: any, res) => {
   try {
     const {
@@ -226,30 +213,25 @@ app.post("/lost", authenticateToken, async (req: any, res) => {
       uniqueId,
       dateLost,
       timeLost,
-      imageUrl,
       location,
       category,
       phone,
       email,
+      imageUrl,
       userId: req.userId,
     });
 
     await lostItem.save();
     res.status(201).json(lostItem);
   } catch (error: any) {
-    console.error("Error saving lost item:", error.message);
     res.status(400).json({ error: error.message });
   }
 });
 
-// Get all lost items (public, but a separate endpoint can be created for user's own items)
 app.get("/lost", async (req, res) => {
   try {
     const { category } = req.query;
-    let query = {};
-    if (category) {
-      query = { category: category as string };
-    }
+    const query = category ? { category: category as string } : {};
     const items = await LostItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
@@ -257,7 +239,6 @@ app.get("/lost", async (req, res) => {
   }
 });
 
-// New endpoint to get a user's specific lost items
 app.get("/my-lost-items", authenticateToken, async (req: any, res) => {
   try {
     const items = await LostItem.find({ userId: req.userId }).sort({ createdAt: -1 });
@@ -267,7 +248,7 @@ app.get("/my-lost-items", authenticateToken, async (req: any, res) => {
   }
 });
 
-// Post found item with userId
+// ✅ FOUND ITEMS
 app.post("/found", authenticateToken, async (req: any, res) => {
   try {
     const {
@@ -289,30 +270,25 @@ app.post("/found", authenticateToken, async (req: any, res) => {
       brand,
       uniqueId,
       dateFound,
-      imageUrl,
       location,
       category,
       phone,
       email,
+      imageUrl,
       userId: req.userId,
     });
 
     await foundItem.save();
     res.status(201).json(foundItem);
   } catch (error: any) {
-    console.error("Error saving found item:", error.message);
     res.status(400).json({ error: error.message });
   }
 });
 
-// Get all found items (public)
 app.get("/found", async (req, res) => {
   try {
     const { category } = req.query;
-    let query = {};
-    if (category) {
-      query = { category: category as string };
-    }
+    const query = category ? { category: category as string } : {};
     const items = await FoundItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
@@ -320,7 +296,6 @@ app.get("/found", async (req, res) => {
   }
 });
 
-// New endpoint to get a user's specific found items
 app.get("/my-found-items", authenticateToken, async (req: any, res) => {
   try {
     const items = await FoundItem.find({ userId: req.userId }).sort({ createdAt: -1 });
@@ -329,7 +304,6 @@ app.get("/my-found-items", authenticateToken, async (req: any, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });

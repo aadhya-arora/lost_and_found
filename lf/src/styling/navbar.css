@@ -100,3 +100,9 @@
 .profile-menu-tooltip li a:hover {
   background-color: #ecf39e;
 }
+
+.translate-widget {
+  display: flex;
+  align-items: center;
+  margin-left: 1rem;
+}
