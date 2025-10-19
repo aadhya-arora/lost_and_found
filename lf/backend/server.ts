@@ -304,6 +304,37 @@ app.get("/my-found-items", authenticateToken, async (req: any, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post("/delete-account", authenticateToken, async (req: any, res) => {
+  try {
+    const userId = req.userId;
+    const { password } = req.body;
+
+    if (!password)
+      return res.status(400).json({ message: "Password is required." });
+
+    const user = await SignUp.findById(userId);
+    if (!user)
+      return res.status(404).json({ message: "User not found." });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: "Incorrect password." });
+
+    await SignUp.deleteOne({ _id: userId });
+
+    await LostItem.deleteMany({ userId });
+    await FoundItem.deleteMany({ userId });
+
+
+    res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
+
+    res.status(200).json({ message: "Account deleted successfully." });
+  } catch (err) {
+    console.error("Delete account error:", err);
+    res.status(500).json({ message: "Server error while deleting account." });
+  }
+});
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });

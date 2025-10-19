@@ -9,6 +9,35 @@ const Settings: React.FC = () => {
     useState<boolean>(true);
   const [user, setUser] = useState<{ username?: string; email?: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
+  const [password, setPassword] = useState("");
+
+  const handleDeleteAccount = async () => {
+    if (!password) {
+      alert("Please enter your password first.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${backendUrl}/delete-account`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Your account has been permanently deleted.");
+        window.location.href = "/auth";
+      } else {
+        alert(data.message || "Incorrect password. Try again.");
+      }
+    } catch (err) {
+      console.error("Delete account error:", err);
+      alert("Server error. Please try again later.");
+    }
+  };
 
   const backendUrl =
     import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
@@ -18,7 +47,7 @@ const Settings: React.FC = () => {
       try {
         const res = await fetch(`${backendUrl}/me`, {
           method: "GET",
-          credentials: "include", 
+          credentials: "include",
         });
         if (res.ok) {
           const data = await res.json();
@@ -107,14 +136,8 @@ const Settings: React.FC = () => {
                 Change username
               </a>
 
-             
-
               <p>Email</p>
-              <input
-                type="email"
-                value={user.email || "Loading..."}
-                readOnly
-              />
+              <input type="email" value={user.email || "Loading..."} readOnly />
 
               <span className="grid-placeholder"></span>
               <p>Contact No:</p>
@@ -132,7 +155,11 @@ const Settings: React.FC = () => {
 
               <span className="grid-placeholder"></span>
 
-              <button type="button" className="submit-button" onClick={handleLogout}>
+              <button
+                type="button"
+                className="submit-button"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             </div>
@@ -144,7 +171,7 @@ const Settings: React.FC = () => {
             <p className="account-settings-p">Manage your preferences</p>
             <div className="preference-settings">
               <p>Language</p>
-               <GoogleTranslateWidget />
+              <GoogleTranslateWidget />
 
               <span className="grid-placeholder"></span>
 
@@ -165,14 +192,15 @@ const Settings: React.FC = () => {
                 <input
                   type="checkbox"
                   id="emailNotifications"
-                  checked={emailNotificationsOn}
-                  onChange={handleEmailNotificationsToggle}
+                  checked={false}
+                  disabled
                   className="toggle-checkbox"
                 />
-                <label htmlFor="emailNotifications" className="toggle-label"></label>
-                <span className="toggle-text">
-                  {emailNotificationsOn ? "On" : "Off"}
-                </span>
+                <label
+                  htmlFor="emailNotifications"
+                  className="toggle-label disabled"
+                ></label>
+                <span className="toggle-text">Off</span>
               </div>
 
               <button type="submit" className="submit-button">
@@ -182,7 +210,6 @@ const Settings: React.FC = () => {
           </div>
         )}
 
-        {/* DELETE ACCOUNT TAB */}
         {activeTab === "Delete" && (
           <div className="delete-tab">
             <p className="account-settings-p">
@@ -191,17 +218,31 @@ const Settings: React.FC = () => {
             <div className="delete-settings">
               <p>We're sorry to see you go. This action is irreversible.</p>
               <p>Please confirm your password to proceed:</p>
-              <input type="password" placeholder="Enter your password" />
+
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+
               <div className="delete-buttons">
-                <button className="submit-button danger">
+                <button
+                  className="submit-button danger"
+                  onClick={handleDeleteAccount}
+                >
                   Delete My Account
                 </button>
-                <button className="submit-button cancel">Cancel</button>
+                <button
+                  className="submit-button cancel"
+                  onClick={() => setPassword("")}
+                >
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
         )}
-        
       </div>
     </div>
   );
