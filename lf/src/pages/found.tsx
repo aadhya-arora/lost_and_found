@@ -69,6 +69,52 @@ const Found = () => {
     }, {} as Record<string, (LostItem | FoundItem)[]>);
   };
 
+  const handleClaim = async (item: FoundItem) => {
+    // Step 1: Show contact info
+    alert(`Contact the person who found this item:
+  📧 Email: ${item.email}
+  📞 Phone: ${item.phone}`);
+
+    // Step 2: Ask for confirmation before deletion
+    const confirmDelete = window.confirm(
+      "Do you want to mark this item as found and remove it from the list?"
+    );
+    if (!confirmDelete) return;
+
+    // Step 3: Proceed with deletion if confirmed
+    try {
+      await axios.delete(`http://localhost:5000/found/${item._id}`);
+      alert("Item successfully marked as claimed and removed from the list.");
+      fetchFoundItems(); // Refresh list
+    } catch (error) {
+      console.error("Error deleting claimed item:", error);
+      alert("Error removing the claimed item from server.");
+    }
+  };
+
+  const handleReportFound = async (item: LostItem) => {
+    // Step 1: Show contact info
+    alert(`Contact the person who lost this item:
+  📧 Email: ${item.email}
+  📞 Phone: ${item.phone}`);
+
+    // Step 2: Ask for confirmation before deletion
+    const confirmDelete = window.confirm(
+      "Do you want to mark this lost item as found and remove it from the list?"
+    );
+    if (!confirmDelete) return;
+
+    // Step 3: Proceed with deletion if confirmed
+    try {
+      await axios.delete(`http://localhost:5000/lost/${item._id}`);
+      alert("Item successfully reported as found and removed from the list.");
+      fetchLostItems(); // Refresh list
+    } catch (error) {
+      console.error("Error deleting lost item:", error);
+      alert("Error removing the lost item from server.");
+    }
+  };
+
   const groupedLostItems = groupItemsByCategory(lostItems);
   const groupedFoundItems = groupItemsByCategory(foundItems);
 
@@ -133,6 +179,11 @@ const Found = () => {
                   </p>
                 )}
                 <button
+                  onClick={() =>
+                    isLost
+                      ? handleReportFound(item as LostItem)
+                      : handleClaim(item as FoundItem)
+                  }
                   className={`${
                     isLost ? "report-found-button" : "claim-button"
                   }`}

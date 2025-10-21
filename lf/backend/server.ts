@@ -162,14 +162,13 @@ app.post("/login", async (req, res) => {
   });
 });
 
-// ✅ GET CURRENT USER
 app.get("/me", async (req, res) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.status(401).json({ error: "Not authenticated" });
 
     const decoded = jwt.verify(token, jwtSecret) as { id: string };
-    const user = await SignUp.findById(decoded.id).select("username email");
+    const user = await SignUp.findById(decoded.id).select("username email contactNo");
     if (!user) return res.status(404).json({ error: "User not found" });
 
     res.json(user);
@@ -177,6 +176,7 @@ app.get("/me", async (req, res) => {
     res.status(401).json({ error: "Invalid token" });
   }
 });
+
 
 // ✅ LOGOUT
 app.post("/logout", (req, res) => {
@@ -305,6 +305,34 @@ app.get("/my-found-items", authenticateToken, async (req: any, res) => {
   }
 });
 
+app.delete("/found/:id", async (req, res) => {
+  try {
+    const deletedItem = await FoundItem.findByIdAndDelete(req.params.id);
+    if (!deletedItem) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    res.status(200).json({ message: "Found item deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting found item:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+app.delete("/lost/:id", async (req, res) => {
+  try {
+    const deletedItem = await LostItem.findByIdAndDelete(req.params.id);
+    if (!deletedItem) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    res.status(200).json({ message: "Lost item deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting lost item:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 app.post("/delete-account", authenticateToken, async (req: any, res) => {
   try {
     const userId = req.userId;
@@ -335,6 +363,29 @@ app.post("/delete-account", authenticateToken, async (req: any, res) => {
     res.status(500).json({ message: "Server error while deleting account." });
   }
 });
+
+app.post("/update-contact", authenticateToken, async (req: any, res) => {
+  try {
+    const { contactNo } = req.body;
+    if (!contactNo) {
+      return res.status(400).json({ message: "Contact number is required." });
+    }
+
+    const user = await SignUp.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    user.contactNo = contactNo;
+    await user.save();
+
+    res.status(200).json({ message: "Contact updated successfully." });
+  } catch (err) {
+    console.error("Error updating contact info:", err);
+    res.status(500).json({ message: "Server error while updating contact." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });

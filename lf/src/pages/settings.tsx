@@ -7,9 +7,36 @@ const Settings: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
   const [emailNotificationsOn, setEmailNotificationsOn] =
     useState<boolean>(true);
-  const [user, setUser] = useState<{ username?: string; email?: string }>({});
+  const [user, setUser] = useState<{ username?: string; email?: string; contactNo?: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [password, setPassword] = useState("");
+  const [showContactModal, setShowContactModal] = useState(false);
+const [contactNo, setContactNo] = useState(user.contactNo || "");
+
+const handleSaveContact = async () => {
+  try {
+    const res = await fetch(`${backendUrl}/update-contact`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ contactNo }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("Contact info updated successfully!");
+      setUser((prev) => ({ ...prev, contactNo }));
+      setShowContactModal(false);
+    } else {
+      alert(data.message || "Failed to update contact info");
+    }
+  } catch (err) {
+    console.error("Error updating contact:", err);
+    alert("Server error");
+  }
+};
+
 
   const handleDeleteAccount = async () => {
     if (!password) {
@@ -140,18 +167,49 @@ const Settings: React.FC = () => {
               <input type="email" value={user.email || "Loading..."} readOnly />
 
               <span className="grid-placeholder"></span>
-              <p>Contact No:</p>
-              <div className="date-input-container">
-                <input type="tel" value="No data yet" readOnly />
-                <span
-                  className="info-icon"
-                  title="Add your contact information"
-                >
-                  <a href="#" className="action-link">
-                    Add contact info
-                  </a>
-                </span>
-              </div>
+             <p>Contact No:</p>
+<div className="date-input-container">
+  <input type="tel" value={user.contactNo || "No data yet"} readOnly />
+  <span className="info-icon" title="Add or update contact information">
+    <a
+      href="#"
+      className="action-link"
+      onClick={(e) => {
+        e.preventDefault();
+        setShowContactModal(true);
+        setContactNo(user.contactNo || "");
+      }}
+    >
+      {user.contactNo ? "Update contact info" : "Add contact info"}
+    </a>
+  </span>
+  {showContactModal && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <h3>{user.contactNo ? "Update Contact Info" : "Add Contact Info"}</h3>
+      <input
+        type="tel"
+        placeholder="Enter mobile number"
+        value={contactNo}
+        onChange={(e) => setContactNo(e.target.value)}
+      />
+      <div className="modal-buttons">
+        <button className="submit-button" onClick={handleSaveContact}>
+          Save
+        </button>
+        <button
+          className="submit-button cancel"
+          onClick={() => setShowContactModal(false)}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+</div>
+
 
               <span className="grid-placeholder"></span>
 
