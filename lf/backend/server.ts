@@ -1,9 +1,3 @@
-// server.ts (final) - SendGrid integration
-// -------------------------
-// - Uses SendGrid API (@sendgrid/mail) for sending footer emails
-// - Keeps your routes, auth, and DB logic
-// - Place required env vars in your .env (see .env.example at the end)
-
 import express, { Request, Response, NextFunction, CookieOptions } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -63,7 +57,6 @@ if (!jwtSecret) {
 
 const app = express();
 
-
 app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
   next();
@@ -99,7 +92,7 @@ const sanitize = (text: string) =>
     .replaceAll("'", "&#039;");
 
 const validateEmail = (email?: string) => {
-  if (!email) return true; 
+  if (!email) return true;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
@@ -108,7 +101,6 @@ const footerLimiter = rateLimit({
   max: 5,
   message: { message: "Too many requests. Please try again later." },
 });
-
 
 app.post("/api/footer-question", footerLimiter, async (req: Request, res: Response) => {
   try {
@@ -151,7 +143,7 @@ app.post("/api/footer-question", footerLimiter, async (req: Request, res: Respon
         </div>
       `,
       replyTo: validateEmail(email) && email ? email : undefined,
-    } as any; 
+    } as any;
 
     await sgMail.send(msg);
 
@@ -163,6 +155,66 @@ app.post("/api/footer-question", footerLimiter, async (req: Request, res: Respon
 });
 
 
+const contactLimiter = rateLimit({
+  windowMs: 60 * 1000, 
+  max: 6, 
+  message: { message: "Too many contact submissions. Please try again later." },
+});
+
+app.post("/api/contact", contactLimiter, async (req: Request, res: Response) => {
+  try {
+    const { name, email, message } = req.body ?? {};
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ message: "Name is required." });
+    }
+    if (!message || typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({ message: "Message is required." });
+    }
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email address." });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      return res.status(500).json({ message: "ADMIN_EMAIL is not set in environment." });
+    }
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn("Attempt to send contact without SENDGRID_API_KEY");
+      return res.status(500).json({ message: "Email provider not configured." });
+    }
+
+    const safeName = sanitize(String(name).trim()).slice(0, 200);
+    const safeMessage = sanitize(String(message).trim()).slice(0, 2000);
+    const safeEmail = email?.trim() ? sanitize(email.trim()).slice(0, 200) : "Not provided";
+
+    const msg = {
+      to: adminEmail,
+      from: process.env.SENDGRID_FROM || `no-reply@${process.env.DOMAIN || "localhost"}`,
+      subject: `New contact form message from ${safeName}`,
+      text: `Name: ${safeName}\nEmail: ${email || "Not provided"}\n\nMessage:\n${message}`,
+      html: `
+        <div style="font-family:Arial, sans-serif; color:#111;">
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${safeName}</p>
+          <p><strong>Email:</strong> ${safeEmail}</p>
+          <hr/>
+          <p>${safeMessage.replace(/\n/g, "<br/>")}</p>
+          <small>Received at ${new Date().toISOString()}</small>
+        </div>
+      `,
+      replyTo: validateEmail(email) && email ? email : undefined,
+    } as any;
+
+    await sgMail.send(msg);
+
+    return res.json({ message: "Message sent successfully." });
+  } catch (err) {
+    console.error("Contact form error:", err);
+    return res.status(500).json({ message: "Failed to send message." });
+  }
+});
+
 mongoose
   .connect(mongoUri, {
     useNewUrlParser: true,
@@ -170,7 +222,6 @@ mongoose
   } as any)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
-
 
 type AuthRequest = Request & { userId?: string };
 
@@ -187,9 +238,11 @@ const cookieOptions: CookieOptions = {
 };
 
 const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const token = (req as any).cookies?.token || (req as any).cookies;
   const cookieToken = (req as any).cookies?.token;
-  const tokenToUse = cookieToken || (req.headers?.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
+  const headerToken = req.headers?.authorization?.startsWith("Bearer ")
+    ? (req.headers.authorization as string).split(" ")[1]
+    : null;
+  const tokenToUse = cookieToken || headerToken;
 
   if (!tokenToUse) return res.status(401).json({ message: "Authentication failed: No token provided." });
 
@@ -201,7 +254,6 @@ const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) 
     next();
   });
 };
-
 
 app.post("/signUp", (req: Request, res: Response) => {
   const { username, email, password } = req.body ?? {};
@@ -269,7 +321,6 @@ app.post("/logout", (req: Request, res: Response) => {
   res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
   res.status(200).json({ message: "Logged out successfully" });
 });
-
 
 app.get("/user-status", authenticateToken, (req: AuthRequest, res: Response) => {
   res.status(200).json({ isLoggedIn: true, userId: req.userId });
@@ -465,25 +516,3 @@ app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });
 
-/*
-.env.example
------------
-PORT=5000
-MONGO_URI=mongodb://username:password@host:port/dbname
-JWT_SECRET=super_secret_value
-ADMIN_EMAIL=admin@yourdomain.com
-DOMAIN=yourdomain.com
-NODE_ENV=development
-CORS_ORIGIN=http://localhost:5173
-
-# SendGrid
-SENDGRID_API_KEY=SG.xxxxxxxx
-SENDGRID_FROM="No Reply <no-reply@yourdomain.com>"
-
-# (Optional SMTP fallback if you ever switch to SMTP provider)
-# SMTP_HOST=smtp.sendgrid.net
-# SMTP_PORT=587
-# SMTP_USER=apikey
-# SMTP_PASS=your_sendgrid_smtp_password_or_api_key
-# SMTP_SECURE=false
-*/
