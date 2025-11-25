@@ -1,4 +1,10 @@
-import express from "express";
+// server.ts (final) - SendGrid integration
+// -------------------------
+// - Uses SendGrid API (@sendgrid/mail) for sending footer emails
+// - Keeps your routes, auth, and DB logic
+// - Place required env vars in your .env (see .env.example at the end)
+
+import express, { Request, Response, NextFunction, CookieOptions } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -10,24 +16,12 @@ import bcrypt from "bcrypt";
 import FoundItem from "./foundItem.js";
 import LostItem from "./lostItem.js";
 import SignUp from "./auth.js";
-import { CookieOptions } from "express";
-
-const cookieOptions: CookieOptions = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as
-    | "none"
-    | "lax"
-    | "strict"
-    | boolean
-    | undefined,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-};
+import rateLimit from "express-rate-limit";
+import sgMail from "@sendgrid/mail";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ✅ Load .env from possible locations
 const candidateEnvPaths = [
   path.resolve(__dirname, "../.env"),
   path.resolve(__dirname, "../../.env"),
@@ -55,9 +49,8 @@ if (!dotenvLoadedFrom) {
   }
 }
 
-
 const PORT = process.env.PORT || 5000;
-const jwtSecret = process.env.JWT_SECRET!;
+const jwtSecret = process.env.JWT_SECRET ?? "";
 const mongoUri = process.env.MONGO_URI;
 
 if (!mongoUri) {
@@ -70,8 +63,8 @@ if (!jwtSecret) {
 
 const app = express();
 
-// ✅ Middleware
-app.use((req, res, next) => {
+
+app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
   next();
 });
@@ -80,14 +73,94 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? "https://your-frontend-domain.com" // 🔥 change to your real domain
+        ? process.env.CORS_ORIGIN || "https://your-frontend-domain.com"
         : "http://localhost:5173",
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+if (!process.env.SENDGRID_API_KEY) {
+  console.warn("⚠️ SENDGRID_API_KEY not set. Emails will fail until configured.");
+} else {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  console.log("📧 SendGrid client ready");
+}
+
+const sanitize = (text: string) =>
+  text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const validateEmail = (email?: string) => {
+  if (!email) return true; 
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const footerLimiter = rateLimit({
+  windowMs: 60 * 1000, 
+  max: 5,
+  message: { message: "Too many requests. Please try again later." },
+});
+
+
+app.post("/api/footer-question", footerLimiter, async (req: Request, res: Response) => {
+  try {
+    const { email, question } = req.body ?? {};
+
+    if (!question || typeof question !== "string" || !question.trim()) {
+      return res.status(400).json({ message: "Question is required." });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ message: "Invalid email address." });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) {
+      return res.status(500).json({ message: "ADMIN_EMAIL is not set in environment." });
+    }
+
+    if (!process.env.SENDGRID_API_KEY) {
+      console.warn("Attempt to send email without SENDGRID_API_KEY");
+      return res.status(500).json({ message: "Email provider not configured." });
+    }
+
+    const safeQuestion = sanitize(question.trim());
+    const safeEmail = email?.trim() ? sanitize(email.trim()) : "Not provided";
+
+    const msg = {
+      to: adminEmail,
+      from: process.env.SENDGRID_FROM || `no-reply@${process.env.DOMAIN || "localhost"}`,
+      subject: `New footer question${email ? ` from ${safeEmail}` : ""}`,
+      text: `Question:\n${question}\n\nSender: ${email || "Not provided"}`,
+      html: `
+        <div style="font-family:Arial, sans-serif; color:#111;">
+          <h2>New Footer Question</h2>
+          <p><strong>Question:</strong></p>
+          <p>${safeQuestion.replace(/\n/g, "<br/>")}</p>
+          <hr/>
+          <p><strong>Sender Email:</strong> ${safeEmail}</p>
+          <small>Received at ${new Date().toISOString()}</small>
+        </div>
+      `,
+      replyTo: validateEmail(email) && email ? email : undefined,
+    } as any; 
+
+    await sgMail.send(msg);
+
+    return res.json({ message: "Question sent successfully." });
+  } catch (err) {
+    console.error("Footer question error:", err);
+    return res.status(500).json({ message: "Failed to send question." });
+  }
+});
 
 
 mongoose
@@ -98,28 +171,43 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// ✅ Auth middleware
-const authenticateToken = (req: any, res: any, next: any) => {
-  const token = req.cookies.token;
-  if (!token)
-    return res.status(401).json({ message: "Authentication failed: No token provided." });
 
-  jwt.verify(token, jwtSecret, (err: any, user: any) => {
-    if (err)
-      return res.status(401).json({ message: "Invalid or expired token." });
-    req.userId = user.id;
+type AuthRequest = Request & { userId?: string };
+
+const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: (process.env.NODE_ENV === "production" ? "none" : "lax") as
+    | "none"
+    | "lax"
+    | "strict"
+    | boolean
+    | undefined,
+  maxAge: 7 * 24 * 60 * 60 * 1000, 
+};
+
+const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
+  const token = (req as any).cookies?.token || (req as any).cookies;
+  const cookieToken = (req as any).cookies?.token;
+  const tokenToUse = cookieToken || (req.headers?.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
+
+  if (!tokenToUse) return res.status(401).json({ message: "Authentication failed: No token provided." });
+
+  if (!jwtSecret) return res.status(500).json({ message: "Server misconfiguration: JWT_SECRET missing." });
+
+  jwt.verify(tokenToUse, jwtSecret, (err: any, decoded: any) => {
+    if (err) return res.status(401).json({ message: "Invalid or expired token." });
+    req.userId = decoded?.id;
     next();
   });
 };
 
-// ✅ SIGNUP
-app.post("/signUp", (req, res) => {
-  const { username, email, password } = req.body;
+
+app.post("/signUp", (req: Request, res: Response) => {
+  const { username, email, password } = req.body ?? {};
 
   if (!username || !email || !password)
-    return res
-      .status(400)
-      .json({ error: "All fields (username, email, password) are required." });
+    return res.status(400).json({ error: "All fields (username, email, password) are required." });
 
   bcrypt.genSalt(10, (err, salt) => {
     if (err) return res.status(500).json({ error: "Salt generation failed." });
@@ -127,7 +215,7 @@ app.post("/signUp", (req, res) => {
       if (err) return res.status(500).json({ error: "Password hashing failed." });
       try {
         const newUser = await SignUp.create({ username, email, password: hash });
-        const token = jwt.sign({ id: newUser._id, email }, jwtSecret, { expiresIn: "7d" });
+        const token = jwt.sign({ id: newUser._id, email }, jwtSecret || "", { expiresIn: "7d" });
         res.cookie("token", token, cookieOptions);
         res.status(200).json({
           message: "Signup successful",
@@ -135,37 +223,37 @@ app.post("/signUp", (req, res) => {
         });
       } catch (error: any) {
         if (error.code === 11000) {
-          return res
-            .status(409)
-            .json({ error: "User with this email or username already exists." });
+          return res.status(409).json({ error: "User with this email or username already exists." });
         }
-        res.status(500).json({ error: "Server Error: Could not create user." });
+        return res.status(500).json({ error: "Server Error: Could not create user." });
       }
     });
   });
 });
 
-// ✅ LOGIN
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await SignUp.findOne({ email });
-  if (!user) return res.status(400).send("User not found");
+app.post("/login", async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body ?? {};
+    const user = await SignUp.findOne({ email });
+    if (!user) return res.status(400).send("User not found");
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(400).send("Invalid password");
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).send("Invalid password");
 
-  const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "7d" });
-  res.cookie("token", token, cookieOptions);
-  res.json({
-    message: "Login successful",
-    user: { username: user.username, email: user.email },
-  });
+    const token = jwt.sign({ id: user._id }, jwtSecret || "", { expiresIn: "7d" });
+    res.cookie("token", token, cookieOptions);
+    res.json({ message: "Login successful", user: { username: user.username, email: user.email } });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).send("Server error");
+  }
 });
 
-app.get("/me", async (req, res) => {
+app.get("/me", async (req: Request, res: Response) => {
   try {
-    const token = req.cookies.token;
+    const token = (req as any).cookies?.token;
     if (!token) return res.status(401).json({ error: "Not authenticated" });
+    if (!jwtSecret) return res.status(500).json({ error: "Server misconfiguration: JWT_SECRET missing." });
 
     const decoded = jwt.verify(token, jwtSecret) as { id: string };
     const user = await SignUp.findById(decoded.id).select("username email contactNo");
@@ -177,20 +265,17 @@ app.get("/me", async (req, res) => {
   }
 });
 
-
-// ✅ LOGOUT
-app.post("/logout", (req, res) => {
+app.post("/logout", (req: Request, res: Response) => {
   res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
   res.status(200).json({ message: "Logged out successfully" });
 });
 
-// ✅ USER STATUS CHECK
-app.get("/user-status", authenticateToken, (req: any, res) => {
+
+app.get("/user-status", authenticateToken, (req: AuthRequest, res: Response) => {
   res.status(200).json({ isLoggedIn: true, userId: req.userId });
 });
 
-// ✅ LOST ITEMS
-app.post("/lost", authenticateToken, async (req: any, res) => {
+app.post("/lost", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const {
       name,
@@ -204,7 +289,7 @@ app.post("/lost", authenticateToken, async (req: any, res) => {
       phone,
       email,
       imageUrl,
-    } = req.body;
+    } = req.body ?? {};
 
     const lostItem = new LostItem({
       name,
@@ -228,7 +313,7 @@ app.post("/lost", authenticateToken, async (req: any, res) => {
   }
 });
 
-app.get("/lost", async (req, res) => {
+app.get("/lost", async (req: Request, res: Response) => {
   try {
     const { category } = req.query;
     const query = category ? { category: category as string } : {};
@@ -239,7 +324,7 @@ app.get("/lost", async (req, res) => {
   }
 });
 
-app.get("/my-lost-items", authenticateToken, async (req: any, res) => {
+app.get("/my-lost-items", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const items = await LostItem.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.status(200).json(items);
@@ -248,8 +333,7 @@ app.get("/my-lost-items", authenticateToken, async (req: any, res) => {
   }
 });
 
-// ✅ FOUND ITEMS
-app.post("/found", authenticateToken, async (req: any, res) => {
+app.post("/found", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const {
       name,
@@ -262,7 +346,7 @@ app.post("/found", authenticateToken, async (req: any, res) => {
       phone,
       email,
       imageUrl,
-    } = req.body;
+    } = req.body ?? {};
 
     const foundItem = new FoundItem({
       name,
@@ -285,7 +369,7 @@ app.post("/found", authenticateToken, async (req: any, res) => {
   }
 });
 
-app.get("/found", async (req, res) => {
+app.get("/found", async (req: Request, res: Response) => {
   try {
     const { category } = req.query;
     const query = category ? { category: category as string } : {};
@@ -296,7 +380,7 @@ app.get("/found", async (req, res) => {
   }
 });
 
-app.get("/my-found-items", authenticateToken, async (req: any, res) => {
+app.get("/my-found-items", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const items = await FoundItem.find({ userId: req.userId }).sort({ createdAt: -1 });
     res.status(200).json(items);
@@ -305,7 +389,7 @@ app.get("/my-found-items", authenticateToken, async (req: any, res) => {
   }
 });
 
-app.delete("/found/:id", async (req, res) => {
+app.delete("/found/:id", async (req: Request, res: Response) => {
   try {
     const deletedItem = await FoundItem.findByIdAndDelete(req.params.id);
     if (!deletedItem) {
@@ -318,8 +402,7 @@ app.delete("/found/:id", async (req, res) => {
   }
 });
 
-
-app.delete("/lost/:id", async (req, res) => {
+app.delete("/lost/:id", async (req: Request, res: Response) => {
   try {
     const deletedItem = await LostItem.findByIdAndDelete(req.params.id);
     if (!deletedItem) {
@@ -332,28 +415,22 @@ app.delete("/lost/:id", async (req, res) => {
   }
 });
 
-
-app.post("/delete-account", authenticateToken, async (req: any, res) => {
+app.post("/delete-account", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
-    const { password } = req.body;
+    const { password } = req.body ?? {};
 
-    if (!password)
-      return res.status(400).json({ message: "Password is required." });
+    if (!password) return res.status(400).json({ message: "Password is required." });
 
     const user = await SignUp.findById(userId);
-    if (!user)
-      return res.status(404).json({ message: "User not found." });
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Incorrect password." });
+    if (!isMatch) return res.status(401).json({ message: "Incorrect password." });
 
     await SignUp.deleteOne({ _id: userId });
-
     await LostItem.deleteMany({ userId });
     await FoundItem.deleteMany({ userId });
-
 
     res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
 
@@ -364,17 +441,15 @@ app.post("/delete-account", authenticateToken, async (req: any, res) => {
   }
 });
 
-app.post("/update-contact", authenticateToken, async (req: any, res) => {
+app.post("/update-contact", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const { contactNo } = req.body;
+    const { contactNo } = req.body ?? {};
     if (!contactNo) {
       return res.status(400).json({ message: "Contact number is required." });
     }
 
     const user = await SignUp.findById(req.userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    if (!user) return res.status(404).json({ message: "User not found." });
 
     user.contactNo = contactNo;
     await user.save();
@@ -389,3 +464,26 @@ app.post("/update-contact", authenticateToken, async (req: any, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });
+
+/*
+.env.example
+-----------
+PORT=5000
+MONGO_URI=mongodb://username:password@host:port/dbname
+JWT_SECRET=super_secret_value
+ADMIN_EMAIL=admin@yourdomain.com
+DOMAIN=yourdomain.com
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+
+# SendGrid
+SENDGRID_API_KEY=SG.xxxxxxxx
+SENDGRID_FROM="No Reply <no-reply@yourdomain.com>"
+
+# (Optional SMTP fallback if you ever switch to SMTP provider)
+# SMTP_HOST=smtp.sendgrid.net
+# SMTP_PORT=587
+# SMTP_USER=apikey
+# SMTP_PASS=your_sendgrid_smtp_password_or_api_key
+# SMTP_SECURE=false
+*/
