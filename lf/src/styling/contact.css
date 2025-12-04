@@ -71,3 +71,9 @@
   width: 600px;
   height: auto;
 }
+
+.contact-status{
+  font-size: 25px;
+  margin-top: 15px;
+  color: #132a13;
+}

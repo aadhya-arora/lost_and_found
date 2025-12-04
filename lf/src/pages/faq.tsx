@@ -205,9 +205,16 @@ const Faq = () => {
           <h1 className="faq-info-heading">FAQs</h1>
           <div className="faq-info-para">
             <p>
-              Have questions? Here you’ll find answers valued by our partners,
-              along with step-by-step instructions and support.
+              Have questions? Here you’ll find answers valued by our partners
+              and community members. We’ve gathered clear explanations, helpful
+              guidance, and step-by-step instructions to support you throughout
+              your lost and found journey. Whether you’re reporting an item,
+              searching for something important, or learning how the platform
+              works, this section will help you navigate with confidence.
             </p>
+            <button className="ask-btn">
+              Ask Your Own Questions <span className="arrow">→</span>{" "}
+            </button>
           </div>
         </div>
         <div className="faq-hero-right">

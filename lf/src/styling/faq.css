@@ -130,3 +130,42 @@
   margin-top: 30px;
   color: #6f732f;
 }
+
+.ask-btn {
+  margin-top: 15px;
+  padding: 12px 24px;
+  background-color: #4f772d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px; 
+}
+
+
+.ask-btn .arrow {
+  margin-bottom: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.ask-btn:hover {
+  background-color: #3d5f22;
+  transform: translateY(-2px);
+  box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+.ask-btn:hover .arrow {
+  transform: translateX(5px);
+}
+
+.ask-btn:active {
+  transform: scale(0.97);
+}
