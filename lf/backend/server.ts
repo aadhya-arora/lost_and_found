@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction, CookieOptions } from "express";
+import express, { Request, Response, NextFunction, CookieOptions,RequestHandler } from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -102,7 +102,7 @@ const footerLimiter = rateLimit({
   message: { message: "Too many requests. Please try again later." },
 });
 
-app.post("/api/footer-question", footerLimiter, async (req: Request, res: Response) => {
+app.post("/api/footer-question",  footerLimiter as unknown as RequestHandler, async (req: Request, res: Response) => {
   try {
     const { email, question } = req.body ?? {};
 
@@ -161,7 +161,7 @@ const contactLimiter = rateLimit({
   message: { message: "Too many contact submissions. Please try again later." },
 });
 
-app.post("/api/contact", contactLimiter, async (req: Request, res: Response) => {
+app.post("/api/contact", contactLimiter as unknown as RequestHandler, async (req: Request, res: Response) => {
   try {
     const { name, email, message } = req.body ?? {};
 
