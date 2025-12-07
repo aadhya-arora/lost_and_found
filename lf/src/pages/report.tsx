@@ -68,7 +68,7 @@ function LocationMarker<T extends { location: string }>({
           `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`
         );
 
-        const data = response.data;
+        
         const address = response.data.address;
         const detailedAddress = [
           address.building,

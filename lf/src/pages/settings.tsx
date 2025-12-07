@@ -4,9 +4,6 @@ import GoogleTranslateWidget from "./GoogleTranslateWidget";
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Account");
-  const [selectedLanguage, setSelectedLanguage] = useState<string>("English");
-  const [emailNotificationsOn, setEmailNotificationsOn] =
-    useState<boolean>(true);
   const [user, setUser] = useState<{ username?: string; email?: string; contactNo?: string }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [password, setPassword] = useState("");
@@ -91,17 +88,7 @@ const handleSaveContact = async () => {
     fetchUser();
   }, [backendUrl]);
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedLanguage(e.target.value);
-    console.log(`Language changed to: ${e.target.value}`);
-  };
 
-  const handleEmailNotificationsToggle = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setEmailNotificationsOn(e.target.checked);
-    console.log(`Email Notifications: ${e.target.checked ? "On" : "Off"}`);
-  };
 
   const handleLogout = async () => {
     try {
