@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
 import "../styling/navbar.css";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import GoogleTranslateWidget from "../pages/GoogleTranslateWidget";
 
@@ -50,29 +50,27 @@ const Navbar = () => {
       <h1 className="logo">Findify</h1>
       <ul className="nav-links">
         <li>
-          <a href="/" className="nav-item">
-            Home
-          </a>
+          <Link to="/">Home</Link>
         </li>
         <li>
-          <a href="/found" className="nav-item">
+          <Link to="/found" className="nav-item">
             Find Items
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="/report" className="nav-item">
+          <Link to="/report" className="nav-item">
             Report Items
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="/faq" className="nav-item">
+          <Link to="/faq" className="nav-item">
             FAQ
-          </a>
+          </Link>
         </li>
         <li>
-          <a href="/contact" className="nav-item">
+          <Link to="/contact" className="nav-item">
             Contact Us
-          </a>
+          </Link>
         </li>
       </ul>
       <div className="profile-icon-container">
