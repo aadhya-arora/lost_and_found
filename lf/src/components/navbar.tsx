@@ -50,7 +50,7 @@ const Navbar = () => {
       <h1 className="logo">Findify</h1>
       <ul className="nav-links">
         <li>
-          <Link to="/">Home</Link>
+          <Link to="/" className="nav-item">Home</Link>
         </li>
         <li>
           <Link to="/found" className="nav-item">
@@ -85,16 +85,16 @@ const Navbar = () => {
               {isLoggedIn ? (
                 <>
                   <li>
-                    <a href="/settings">Settings</a>
+                    <Link to="/settings">Settings</Link>
                   </li>
                   <li>
-                    <a href="/help">Help</a>
+                    <Link to="/help">Help</Link>
                   </li>
                   <li>
-                    <a href="/my-reports">My Reports</a>
+                    <Link to="/my-reports">My Reports</Link>
                   </li>
                   <li onClick={handleLogout}>
-                    <a href="#">Log Out</a>
+                    <Link to="/">Log Out</Link>
                   </li>
                   <li>
                     <div className="translate-widget">
@@ -104,7 +104,7 @@ const Navbar = () => {
                 </>
               ) : (
                 <li>
-                  <a href="/auth">Log In</a>
+                  <Link to="/auth">Log In</Link>
                 </li>
               )}
             </ul>
