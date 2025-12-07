@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction, CookieOptions,RequestHandler } from "express";
 import cors from "cors";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -377,8 +377,8 @@ app.get("/lost", async (req: Request, res: Response) => {
 
 app.get("/my-lost-items", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const items = await LostItem.find({ userId: req.userId }).sort({ createdAt: -1 });
-    res.status(200).json(items);
+    const items = await LostItem.find({ userId: req.userId } as any).sort({ createdAt: -1 });
+     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -433,7 +433,7 @@ app.get("/found", async (req: Request, res: Response) => {
 
 app.get("/my-found-items", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const items = await FoundItem.find({ userId: req.userId }).sort({ createdAt: -1 });
+    const items = await FoundItem.find({ userId: req.userId } as any).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -480,8 +480,8 @@ app.post("/delete-account", authenticateToken, async (req: AuthRequest, res: Res
     if (!isMatch) return res.status(401).json({ message: "Incorrect password." });
 
     await SignUp.deleteOne({ _id: userId });
-    await LostItem.deleteMany({ userId });
-    await FoundItem.deleteMany({ userId });
+    await LostItem.deleteMany({ userId } as any);
+    await FoundItem.deleteMany({ userId } as any);
 
     res.clearCookie("token", { ...cookieOptions, maxAge: 0 });
 
