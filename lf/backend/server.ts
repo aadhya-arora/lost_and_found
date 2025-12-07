@@ -16,6 +16,8 @@ import sgMail from "@sendgrid/mail";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+
+
 const candidateEnvPaths = [
   path.resolve(__dirname, "../.env"),
   path.resolve(__dirname, "../../.env"),
@@ -56,6 +58,25 @@ if (!jwtSecret) {
 }
 
 const app = express();
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean); 
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("CORS policy: This origin is not allowed"));
+  },
+  credentials: true, 
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept"]
+};
+
+app.use(cors(corsOptions));
+
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
