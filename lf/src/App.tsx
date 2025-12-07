@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/home";
 import Faq from "./pages/faq";
 import Contact from "./pages/contact";
@@ -22,7 +22,7 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
@@ -37,7 +37,7 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/help" element={<Help />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
 
