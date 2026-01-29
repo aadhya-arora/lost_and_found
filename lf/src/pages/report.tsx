@@ -139,19 +139,25 @@ const Report: React.FC = () => {
   const [foundData, setFoundData] = useState<FoundDataType>(initialFoundForm);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        await axios.get("http://localhost:5000/user-status", {
-          withCredentials: true,
-        });
-      } catch (err) {
-        alert("You must be logged in to report an item.");
-        navigate("/auth");
-      }
-    };
-    checkLoginStatus();
-  }, [navigate]);
+  // src/pages/report.tsx
+
+useEffect(() => {
+  const checkLoginStatus = async () => {
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+      
+      // Changed from /user-status to /me
+      await axios.get(`${backendUrl}/me`, {
+        withCredentials: true,
+      });
+      // If request succeeds, user is logged in
+    } catch (err) {
+      alert("You must be logged in to report an item.");
+      navigate("/auth");
+    }
+  };
+  checkLoginStatus();
+}, [navigate]);
 
   useEffect(() => {
     const predictCategory = async () => {
