@@ -11,39 +11,41 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      try {
-        await axios.get("http://localhost:5000/user-status", {
-          withCredentials: true,
-        });
-        setIsLoggedIn(true);
-      } catch (err) {
-        setIsLoggedIn(false);
-      }
-    };
-    checkLoginStatus();
-  }, []);
+  const backendUrl =
+  import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+useEffect(() => {
+  const checkLoginStatus = async () => {
+    try {
+     await axios.get(`${backendUrl}/me`, {
+  withCredentials: true,
+});
+      setIsLoggedIn(true);
+    } catch {
+      setIsLoggedIn(false);
+    }
+  };
+
+  checkLoginStatus();
+}, [backendUrl]);
 
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu);
   };
 
   const handleLogout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:5000/logout",
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-      setIsLoggedIn(false);
-      navigate("/");
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  try {
+    await axios.post(
+      `${backendUrl}/logout`,
+      {},
+      { withCredentials: true }
+    );
+    setIsLoggedIn(false);
+    navigate("/");
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
+};
 
   return (
     <nav className="navbar">

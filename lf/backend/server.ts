@@ -187,7 +187,7 @@ app.post("/api/footer-question", footerLimiter as unknown as RequestHandler, asy
   }
 });
 
-app.post("/register", async (req: Request, res: Response) => {
+app.post("/signUp", async (req: Request, res: Response) => {
   try {
     const { username, email, password } = req.body ?? {};
     if (!username || !email || !password) {
@@ -210,10 +210,10 @@ app.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body ?? {};
     const user = await SignUp.findOne({ email });
-    if (!user) return res.status(400).send("User not found");
+    if (!user) return res.status(400).json({ message: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).send("Invalid password");
+    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
     const token = jwt.sign({ id: user._id }, jwtSecret || "", { expiresIn: "7d" });
     res.cookie("token", token, cookieOptions);
