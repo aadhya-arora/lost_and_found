@@ -312,17 +312,26 @@ useEffect(() => {
 const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   try {
-    // 1. Define backendUrl using environment variables
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
     
     let imageUrl = "";
     if (foundData.image) {
-      // ... (Cloudinary upload logic remains the same)
+      const imageData = new FormData();
+      imageData.append("file", foundData.image);
+      imageData.append("upload_preset", "lost_and_found");
+      
+      // Request to Cloudinary
+      const cloudinaryResponse = await axios.post(
+        "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+        imageData
+      );
+      // Assign the secure URL from Cloudinary to our variable
+      imageUrl = cloudinaryResponse.data.secure_url;
     }
 
+    // Now itemData contains the valid Cloudinary URL
     const itemData = { ...foundData, imageUrl };
 
-    // 2. Use the backendUrl variable instead of localhost
     await axios.post(`${backendUrl}/found`, itemData, {
       withCredentials: true,
     });
@@ -331,7 +340,6 @@ const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     // ... rest of logic
   } catch (error) {
     console.error("Error submitting found report:", error);
-    alert("Error submitting found report. Please try again.");
   }
 };
 
