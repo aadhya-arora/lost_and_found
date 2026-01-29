@@ -71,13 +71,15 @@ const allowedOrigins = (process.env.CORS_ORIGIN || "")
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // allow requests with no origin (server-to-server, curl, some health checks)
     if (!origin) return callback(null, true);
 
-    // allow wildcard if included
-    if (allowedOrigins.includes("*")) return callback(null, true);
-
+    // 1. Check for exact match in allowedOrigins
     if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    // 2. Check if the origin is any Vercel deployment from your project
+    if (origin.endsWith(".vercel.app") && origin.includes("lost-and-found")) {
+      return callback(null, true);
+    }
 
     return callback(new Error(`CORS policy: This origin is not allowed — ${origin}`));
   },
