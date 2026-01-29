@@ -267,12 +267,18 @@ app.get("/lost", async (req: Request, res: Response) => {
   }
 });
 
+// backend/server.ts
 app.post("/found", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = new FoundItem({ ...(req.body || {}), userId: req.userId });
+    // Ensure req.userId (set by authenticateToken) is being passed to the new item
+    const item = new FoundItem({ 
+      ...req.body, 
+      userId: req.userId // This is the critical link
+    });
     await item.save();
     res.status(201).json(item);
   } catch (error: any) {
+    console.error("Found item save error:", error.message); // Log the specific error
     res.status(400).json({ error: error.message });
   }
 });

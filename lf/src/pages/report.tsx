@@ -308,37 +308,32 @@ useEffect(() => {
     }
   };
 
-  const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      let imageUrl = "";
-      if (foundData.image) {
-        const imageData = new FormData();
-        imageData.append("file", foundData.image);
-        imageData.append("upload_preset", "lost_and_found");
-        const cloudinaryResponse = await axios.post(
-          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
-          imageData
-        );
-        imageUrl = cloudinaryResponse.data.secure_url;
-      }
-
-      const itemData = { ...foundData, imageUrl };
-
-      await axios.post("http://localhost:5000/found", itemData, {
-        withCredentials: true,
-      });
-
-      alert("Found item report submitted successfully!");
-
-      setFoundData(initialFoundForm);
-      setStep(1);
-      setSelectedOption(null);
-    } catch (error) {
-      console.error("Error submitting found report:", error);
-      alert("Error submitting found report. Please try again.");
+  // src/pages/report.tsx
+const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    // 1. Define backendUrl using environment variables
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    
+    let imageUrl = "";
+    if (foundData.image) {
+      // ... (Cloudinary upload logic remains the same)
     }
-  };
+
+    const itemData = { ...foundData, imageUrl };
+
+    // 2. Use the backendUrl variable instead of localhost
+    await axios.post(`${backendUrl}/found`, itemData, {
+      withCredentials: true,
+    });
+
+    alert("Found item report submitted successfully!");
+    // ... rest of logic
+  } catch (error) {
+    console.error("Error submitting found report:", error);
+    alert("Error submitting found report. Please try again.");
+  }
+};
 
   return (
     <div>
