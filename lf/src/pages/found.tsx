@@ -40,23 +40,28 @@ const Found = () => {
     fetchFoundItems();
   }, []);
 
-  const fetchLostItems = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/lost");
-      setLostItems(response.data);
-    } catch (error) {
-      console.error("Error fetching lost items:", error);
-    }
-  };
+  // Use environment variables or a constant for your Render URL
+const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  const fetchFoundItems = async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/found");
-      setFoundItems(response.data);
-    } catch (error) {
-      console.error("Error fetching found items:", error);
-    }
-  };
+const fetchLostItems = async () => {
+  try {
+    // Change from "http://localhost:5000/lost"
+    const response = await axios.get(`${backendUrl}/lost`); 
+    setLostItems(response.data);
+  } catch (error) {
+    console.error("Error fetching lost items:", error);
+  }
+};
+
+const fetchFoundItems = async () => {
+  try {
+    // Change from "http://localhost:5000/found"
+    const response = await axios.get(`${backendUrl}/found`);
+    setFoundItems(response.data);
+  } catch (error) {
+    console.error("Error fetching found items:", error);
+  }
+};
 
   const groupItemsByCategory = (items: (LostItem | FoundItem)[]) => {
     return items.reduce((acc, item) => {
