@@ -88,7 +88,7 @@ const fetchFoundItems = async () => {
 
     // Step 3: Proceed with deletion if confirmed
     try {
-      await axios.delete(`http://localhost:5000/found/${item._id}`);
+      await axios.delete(`${backendUrl}/found/${item._id}`);
       alert("Item successfully marked as claimed and removed from the list.");
       fetchFoundItems(); // Refresh list
     } catch (error) {
@@ -111,7 +111,7 @@ const fetchFoundItems = async () => {
 
     // Step 3: Proceed with deletion if confirmed
     try {
-      await axios.delete(`http://localhost:5000/lost/${item._id}`);
+      await axios.delete(`${backendUrl}/lost/${item._id}`);
       alert("Item successfully reported as found and removed from the list.");
       fetchLostItems(); // Refresh list
     } catch (error) {
@@ -146,13 +146,18 @@ const fetchFoundItems = async () => {
               key={item._id}
               className={`item-card ${isLost ? "lost-card" : "found-card"}`}
             >
-              {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="item-image"
-                />
-              )}
+             {item.imageUrl && (
+  <img
+    // Add the backendUrl prefix here
+    src={item.imageUrl.startsWith('http') ? item.imageUrl : `${backendUrl}${item.imageUrl}`}
+    alt={item.name}
+    className="item-image"
+    // Optional: Add a fallback if the image fails to load
+    onError={(e) => {
+      e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image";
+    }}
+  />
+)}
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
                 <p>
