@@ -294,6 +294,28 @@ app.get("/found", async (req: Request, res: Response) => {
   }
 });
 
+// DELETE route for Found Items
+app.delete("/found/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const item = await FoundItem.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+    res.status(200).json({ message: "Found item deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE route for Lost Items
+app.delete("/lost/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const item = await LostItem.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+    res.status(200).json({ message: "Lost item deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
