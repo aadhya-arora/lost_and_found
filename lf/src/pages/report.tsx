@@ -276,38 +276,50 @@ useEffect(() => {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
-  const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      let imageUrl = "";
-      if (formData.image) {
-        const imageData = new FormData();
-        imageData.append("file", formData.image);
-        imageData.append("upload_preset", "lost_and_found");
-        const cloudinaryResponse = await axios.post(
-          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
-          imageData
-        );
-        imageUrl = cloudinaryResponse.data.secure_url;
-      }
+ // src/pages/report.tsx
 
-      const itemData = { ...formData, imageUrl };
-
-      await axios.post("http://localhost:5000/lost", itemData, {
-        withCredentials: true,
-      });
-
-      alert("Lost item report submitted successfully!");
-
-      setFormData(initialLostForm);
-      setStep(1);
-      setSelectedOption(null);
-    } catch (error) {
-      console.error("Error submitting lost report:", error);
-      alert("Error submitting lost report. Please try again.");
+const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  try {
+    // FIX 1: Use the dynamic backend URL instead of hardcoded localhost:5000
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    
+    let imageUrl = "";
+    if (formData.image) {
+      const imageData = new FormData();
+      imageData.append("file", formData.image);
+      imageData.append("upload_preset", "lost_and_found");
+      const cloudinaryResponse = await axios.post(
+        "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+        imageData
+      );
+      imageUrl = cloudinaryResponse.data.secure_url;
     }
-  };
 
+    const itemData = { ...formData, imageUrl };
+
+    // FIX 2: Use backendUrl variable to ensure consistency with your environment
+    await axios.post(`${backendUrl}/lost`, itemData, {
+      withCredentials: true,
+    });
+
+    alert("Lost item report submitted successfully!");
+
+    setFormData(initialLostForm);
+    setStep(1);
+    setSelectedOption(null);
+  } catch (error: any) {
+    // FIX 3: Log the actual server response to help debugging
+    console.error("Error submitting lost report:", error.response?.data || error.message);
+    
+    if (error.response?.status === 401) {
+      alert("Your session has expired. Please log in again.");
+      navigate("/auth");
+    } else {
+      alert(`Error: ${error.response?.data?.error || "Internal Server Error"}`);
+    }
+  }
+};
   // src/pages/report.tsx
 const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
