@@ -87,10 +87,13 @@ const fetchFoundItems = async () => {
     if (!confirmDelete) return;
 
     // Step 3: Proceed with deletion if confirmed
-    try {
-      await axios.delete(`${backendUrl}/found/${item._id}`);
+   try {
+      // Add withCredentials: true here
+      await axios.delete(`${backendUrl}/found/${item._id}`, {
+        withCredentials: true
+      });
       alert("Item successfully marked as claimed and removed from the list.");
-      fetchFoundItems(); // Refresh list
+      fetchFoundItems(); 
     } catch (error) {
       console.error("Error deleting claimed item:", error);
       alert("Error removing the claimed item from server.");
@@ -110,10 +113,13 @@ const fetchFoundItems = async () => {
     if (!confirmDelete) return;
 
     // Step 3: Proceed with deletion if confirmed
-    try {
-      await axios.delete(`${backendUrl}/lost/${item._id}`);
+   try {
+      // Add withCredentials: true here
+      await axios.delete(`${backendUrl}/lost/${item._id}`, {
+        withCredentials: true
+      });
       alert("Item successfully reported as found and removed from the list.");
-      fetchLostItems(); // Refresh list
+      fetchLostItems(); 
     } catch (error) {
       console.error("Error deleting lost item:", error);
       alert("Error removing the lost item from server.");
