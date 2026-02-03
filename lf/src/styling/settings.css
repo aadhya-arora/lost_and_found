@@ -110,6 +110,10 @@
   text-align: right;
 }
 
+.action-linkcancel{
+  margin-left: 20px;
+}
+
 .action-link:hover {
   text-decoration: underline;
 }

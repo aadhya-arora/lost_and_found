@@ -427,6 +427,31 @@ app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
+// Add this to aadhya-arora/lost_and_found/.../lf/backend/server.ts
+
+app.post("/update-contact", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { contactNo } = req.body;
+    if (contactNo === undefined || typeof contactNo !== "string") {
+      return res.status(400).json({ message: "Invalid contact number format." });
+    }
+    const user = await SignUp.findByIdAndUpdate(
+      req.userId,
+      { contactNo: contactNo.trim() },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.json({ message: "Contact info updated successfully", contactNo: user.contactNo });
+  } catch (err) {
+    console.error("Update contact error:", err);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });
