@@ -21,13 +21,15 @@ const MyReports: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchUserReports = async () => {
       try {
         const [lostRes, foundRes] = await Promise.all([
-          axios.get("http://localhost:5000/my-lost-items", { withCredentials: true }),
-          axios.get("http://localhost:5000/my-found-items", { withCredentials: true }),
+          
+          axios.get(`${backendUrl}/my-lost-items`, { withCredentials: true }),
+          axios.get(`${backendUrl}/my-found-items`, { withCredentials: true }),
         ]);
 
         setLostItems(lostRes.data);
@@ -41,7 +43,7 @@ const MyReports: React.FC = () => {
       }
     };
     fetchUserReports();
-  }, [navigate]);
+  }, [navigate, backendUrl]);
 
   if (loading) {
     return <div className="reports-container">Loading your reports...</div>;

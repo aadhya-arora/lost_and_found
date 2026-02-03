@@ -276,12 +276,10 @@ useEffect(() => {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
- // src/pages/report.tsx
-
 const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   try {
-    // FIX 1: Use the dynamic backend URL instead of hardcoded localhost:5000
+    
     const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
     
     let imageUrl = "";
@@ -298,7 +296,6 @@ const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
 
     const itemData = { ...formData, imageUrl };
 
-    // FIX 2: Use backendUrl variable to ensure consistency with your environment
     await axios.post(`${backendUrl}/lost`, itemData, {
       withCredentials: true,
     });
@@ -309,7 +306,6 @@ const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     setStep(1);
     setSelectedOption(null);
   } catch (error: any) {
-    // FIX 3: Log the actual server response to help debugging
     console.error("Error submitting lost report:", error.response?.data || error.message);
     
     if (error.response?.status === 401) {
@@ -320,7 +316,7 @@ const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
     }
   }
 };
-  // src/pages/report.tsx
+ 
 const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   try {
@@ -332,16 +328,16 @@ const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
       imageData.append("file", foundData.image);
       imageData.append("upload_preset", "lost_and_found");
       
-      // Request to Cloudinary
+     
       const cloudinaryResponse = await axios.post(
         "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
         imageData
       );
-      // Assign the secure URL from Cloudinary to our variable
+    
       imageUrl = cloudinaryResponse.data.secure_url;
     }
 
-    // Now itemData contains the valid Cloudinary URL
+   
     const itemData = { ...foundData, imageUrl };
 
     await axios.post(`${backendUrl}/found`, itemData, {
@@ -349,7 +345,9 @@ const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
     });
 
     alert("Found item report submitted successfully!");
-    // ... rest of logic
+    setFoundData(initialFoundForm);
+    setStep(1);
+    setSelectedOption(null);
   } catch (error) {
     console.error("Error submitting found report:", error);
   }
