@@ -12,6 +12,7 @@ export interface IFoundItem extends Document {
   phone: string;
   email: string;
   userId: mongoose.Schema.Types.ObjectId;
+  claimedByEmail?: string;
 }
 
 const FoundItemSchema: Schema = new Schema(
@@ -32,6 +33,7 @@ const FoundItemSchema: Schema = new Schema(
       enum: ["active", "claimed"],
       default: "active",
     },
+    claimedByEmail: { type: String, default: null },
   },
   { timestamps: true },
 );

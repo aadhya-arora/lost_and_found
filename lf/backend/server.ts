@@ -352,7 +352,16 @@ app.get("/my-found-items", authenticateToken as any, async (req: Request, res: R
 
 app.delete("/found/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = await FoundItem.findByIdAndUpdate(req.params.id, { status: "claimed" });
+    const claimer = await SignUp.findById(req.userId);
+    
+    const item = await FoundItem.findByIdAndUpdate(
+      req.params.id, 
+      { 
+        status: "claimed",
+        claimedByEmail: claimer?.email
+      },
+      { new: true }
+    );
     if (!item) return res.status(404).json({ message: "Item not found" });
     res.status(200).json({ message: "Item marked as claimed" });
   } catch (error: any) {
@@ -362,10 +371,30 @@ app.delete("/found/:id", authenticateToken, async (req: AuthRequest, res: Respon
 
 app.delete("/lost/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = await LostItem.findByIdAndUpdate(req.params.id, { status: "claimed" });
-    if (!item) return res.status(404).json({ message: "Item not found" });
-    res.status(200).json({ message: "Item marked as claimed" });
+    const reporter = await SignUp.findById(req.userId);
+    
+    if (!reporter) {
+      return res.status(404).json({ error: "Authenticated user not found" });
+    }
+    const item = await LostItem.findByIdAndUpdate(
+      req.params.id, 
+      { 
+        status: "claimed",
+        foundByEmail: reporter.email
+      },
+      { new: true }
+    );
+
+    if (!item) {
+      return res.status(404).json({ message: "Lost item not found" });
+    }
+
+    res.status(200).json({ 
+      message: "Item marked as found", 
+      foundBy: reporter.email 
+    });
   } catch (error: any) {
+    console.error("Error updating lost item status:", error);
     res.status(500).json({ error: error.message });
   }
 });

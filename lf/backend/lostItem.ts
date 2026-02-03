@@ -13,6 +13,7 @@ export interface ILostItem extends Document {
   phone: string;
   email: string;
   userId: mongoose.Schema.Types.ObjectId;
+  claimedByEmail?: string;
 }
 
 const LostItemSchema: Schema = new Schema(
@@ -34,6 +35,7 @@ const LostItemSchema: Schema = new Schema(
       enum: ["active", "claimed"],
       default: "active"
     },
+    claimedByEmail: { type: String, default: null },
   },
   { timestamps: true }
 );

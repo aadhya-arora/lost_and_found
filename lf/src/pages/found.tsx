@@ -92,7 +92,6 @@ const fetchFoundItems = async () => {
       await axios.delete(`${backendUrl}/found/${item._id}`, {
         withCredentials: true
       });
-      alert("Item successfully marked as claimed and removed from the list.");
       fetchFoundItems(); 
     } catch (error) {
       console.error("Error deleting claimed item:", error);
@@ -118,7 +117,6 @@ const fetchFoundItems = async () => {
       await axios.delete(`${backendUrl}/lost/${item._id}`, {
         withCredentials: true
       });
-      alert("Item successfully reported as found and removed from the list.");
       fetchLostItems(); 
     } catch (error) {
       console.error("Error deleting lost item:", error);

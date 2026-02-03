@@ -13,6 +13,8 @@ interface UserItem {
   location: string;
   category: string;
   userId: string;
+  status: string;
+  claimedByEmail?: string;
 }
 
 const MyReports: React.FC = () => {
@@ -61,7 +63,6 @@ const MyReports: React.FC = () => {
 
     return items.map((item) => (
       <div key={item._id} className={`report-card card-${type}`}>
-        {/* Visual indicator for report type */}
         <div className={`report-type-badge badge-${type}`}>
           {type.toUpperCase()} REPORT
         </div>
@@ -79,6 +80,11 @@ const MyReports: React.FC = () => {
               type === "lost" ? item.dateLost! : item.dateFound!
             ).toLocaleDateString()}
           </p>
+          {item.status === "claimed" && item.claimedByEmail && (
+          <p className="claimed-info">
+            <strong>Status:</strong> {type === "lost" ? "Found" : "Claimed"} by {item.claimedByEmail}
+          </p>
+        )}
         </div>
       </div>
     ));
