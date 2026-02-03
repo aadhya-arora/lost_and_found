@@ -272,7 +272,7 @@ app.post("/lost", authenticateToken, async (req: AuthRequest, res: Response) => 
 app.get("/lost", async (req: Request, res: Response) => {
   try {
     const { category } = req.query;
-    const query = category ? { category: category as string } : {};
+    const query = { status: "active", ...(category && { category: category as string }) };
     const items = await LostItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
@@ -280,7 +280,6 @@ app.get("/lost", async (req: Request, res: Response) => {
   }
 });
 
-// backend/server.ts
 app.post("/found", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.userId) return res.status(401).json({ error: "Not authenticated" });
@@ -306,14 +305,13 @@ app.post("/found", authenticateToken, async (req: AuthRequest, res: Response) =>
 app.get("/found", async (req: Request, res: Response) => {
   try {
     const { category } = req.query;
-    const query = category ? { category: category as string } : {};
+    const query = { status: "active", ...(category && { category: category as string }) };
     const items = await FoundItem.find(query).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 app.get("/my-lost-items", authenticateToken as any, async (req: Request, res: Response) => {
   const authReq = req as AuthRequest;
@@ -352,28 +350,25 @@ app.get("/my-found-items", authenticateToken as any, async (req: Request, res: R
   }
 });
 
-// DELETE route for Found Items
 app.delete("/found/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = await FoundItem.findByIdAndDelete(req.params.id);
+    const item = await FoundItem.findByIdAndUpdate(req.params.id, { status: "claimed" });
     if (!item) return res.status(404).json({ message: "Item not found" });
-    res.status(200).json({ message: "Found item deleted successfully" });
+    res.status(200).json({ message: "Item marked as claimed" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// DELETE route for Lost Items
 app.delete("/lost/:id", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = await LostItem.findByIdAndDelete(req.params.id);
+    const item = await LostItem.findByIdAndUpdate(req.params.id, { status: "claimed" });
     if (!item) return res.status(404).json({ message: "Item not found" });
-    res.status(200).json({ message: "Lost item deleted successfully" });
+    res.status(200).json({ message: "Item marked as claimed" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);

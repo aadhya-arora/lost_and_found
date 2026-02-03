@@ -29,6 +29,11 @@ const LostItemSchema: Schema = new Schema(
     phone: { type: String, required: true },
     email: { type: String, required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "SignUp" },
+    status: {
+      type: String,
+      enum: ["active", "claimed"],
+      default: "active"
+    },
   },
   { timestamps: true }
 );
