@@ -94,6 +94,32 @@
   color: #4f772d;
 }
 
+/* src/styling/my-reports.css */
+
+.report-type-badge {
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.badge-lost {
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ef9a9a;
+}
+
+.badge-found {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.card-lost { border-left: 4px solid #ef9a9a; }
+.card-found { border-left: 4px solid #a5d6a7; }
+
 @media (max-width: 768px) {
   .reports-grid {
     grid-template-columns: 1fr;

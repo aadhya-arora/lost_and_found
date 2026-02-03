@@ -217,7 +217,12 @@ app.post("/login", async (req: Request, res: Response) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
-    const token = jwt.sign({ id: user._id }, jwtSecret || "", { expiresIn: "7d" });
+    if (!jwtSecret) {
+      console.error("Server misconfiguration: JWT_SECRET missing.");
+      return res.status(500).json({ error: "Server misconfiguration: JWT_SECRET missing." });
+    }
+
+    const token = jwt.sign({ id: String(user._id) }, jwtSecret, { expiresIn: "7d" });
     res.cookie("token", token, cookieOptions);
     res.json({ message: "Login successful", user: { username: user.username, email: user.email } });
   } catch (err) {
@@ -248,7 +253,15 @@ app.post("/logout", (req: Request, res: Response) => {
 });
 app.post("/lost", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const item = new LostItem({ ...(req.body || {}), userId: req.userId });
+    if (!req.userId) return res.status(401).json({ error: "Not authenticated" });
+    let userObjId: mongoose.Types.ObjectId;
+    try {
+      userObjId = new mongoose.Types.ObjectId(req.userId);
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const item = new LostItem({ ...(req.body || {}), userId: userObjId as any });
     await item.save();
     res.status(201).json(item);
   } catch (error: any) {
@@ -270,10 +283,17 @@ app.get("/lost", async (req: Request, res: Response) => {
 // backend/server.ts
 app.post("/found", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    // Ensure req.userId (set by authenticateToken) is being passed to the new item
-    const item = new FoundItem({ 
-      ...req.body, 
-      userId: req.userId // This is the critical link
+    if (!req.userId) return res.status(401).json({ error: "Not authenticated" });
+    let userObjId: mongoose.Types.ObjectId;
+    try {
+      userObjId = new mongoose.Types.ObjectId(req.userId);
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const item = new FoundItem({
+      ...req.body,
+      userId: userObjId as any
     });
     await item.save();
     res.status(201).json(item);
@@ -288,6 +308,44 @@ app.get("/found", async (req: Request, res: Response) => {
     const { category } = req.query;
     const query = category ? { category: category as string } : {};
     const items = await FoundItem.find(query).sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.get("/my-lost-items", authenticateToken as any, async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    if (!authReq.userId) return res.status(401).json({ error: "Not authenticated" });
+    let userObjId: mongoose.Types.ObjectId;
+    try {
+      userObjId = new mongoose.Types.ObjectId(authReq.userId);
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const items = await LostItem.find({ userId: userObjId as any }).sort({ createdAt: -1 });
+    res.status(200).json(items);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+app.get("/my-found-items", authenticateToken as any, async (req: Request, res: Response) => {
+  const authReq = req as AuthRequest;
+  try {
+    if (!authReq.userId) return res.status(401).json({ error: "Not authenticated" });
+    let userObjId: mongoose.Types.ObjectId;
+    try {
+      userObjId = new mongoose.Types.ObjectId(authReq.userId);
+    } catch (e) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+
+    const items = await FoundItem.find({ userId: userObjId as any }).sort({ createdAt: -1 });
     res.status(200).json(items);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

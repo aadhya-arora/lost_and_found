@@ -21,13 +21,14 @@ const MyReports: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Ensure this matches the backend URL logic used in Navbar
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
- useEffect(() => {
+  useEffect(() => {
     const fetchUserReports = async () => {
       try {
         const [lostRes, foundRes] = await Promise.all([
-          
           axios.get(`${backendUrl}/my-lost-items`, { withCredentials: true }),
           axios.get(`${backendUrl}/my-found-items`, { withCredentials: true }),
         ]);
@@ -36,7 +37,7 @@ const MyReports: React.FC = () => {
         setFoundItems(foundRes.data);
       } catch (err) {
         console.error("Error fetching user reports:", err);
-        setError("You must be logged in to view your reports. Redirecting to login page...");
+        setError("You must be logged in to view your reports. Redirecting...");
         setTimeout(() => navigate("/auth"), 3000);
       } finally {
         setLoading(false);
@@ -55,24 +56,23 @@ const MyReports: React.FC = () => {
 
   const renderItems = (items: UserItem[], type: "lost" | "found") => {
     if (items.length === 0) {
-      return (
-        <p className="no-items-message">No {type} items reported yet.</p>
-      );
+      return <p className="no-items-message">No {type} items reported yet.</p>;
     }
 
     return items.map((item) => (
-      <div key={item._id} className="report-card">
+      <div key={item._id} className={`report-card card-${type}`}>
+        {/* Visual indicator for report type */}
+        <div className={`report-type-badge badge-${type}`}>
+          {type.toUpperCase()} REPORT
+        </div>
+
         {item.imageUrl && (
           <img src={item.imageUrl} alt={item.name} className="report-image" />
         )}
         <div className="report-details">
           <h3>{item.name}</h3>
-          <p>
-            <strong>Category:</strong> {item.category}
-          </p>
-          <p>
-            <strong>Location:</strong> {item.location}
-          </p>
+          <p><strong>Category:</strong> {item.category}</p>
+          <p><strong>Location:</strong> {item.location}</p>
           <p>
             <strong>Date {type === "lost" ? "Lost" : "Found"}:</strong>{" "}
             {new Date(
