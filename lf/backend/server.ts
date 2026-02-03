@@ -399,6 +399,34 @@ app.delete("/lost/:id", authenticateToken, async (req: AuthRequest, res: Respons
   }
 });
 
+app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { username } = req.body;
+    if (!username || typeof username !== "string" || !username.trim()) {
+      return res.status(400).json({ message: "Username is required." });
+    }
+
+    // Check if the username is already taken
+    const existingUser = await SignUp.findOne({ username: username.trim() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already in use." });
+    }
+
+    const user = await SignUp.findByIdAndUpdate(
+      req.userId,
+      { username: username.trim() },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    res.json({ message: "Username updated successfully", username: user.username });
+  } catch (err) {
+    console.error("Update username error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (${process.env.NODE_ENV || "development"})`);
 });

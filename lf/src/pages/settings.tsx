@@ -4,36 +4,41 @@ import GoogleTranslateWidget from "./GoogleTranslateWidget";
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Account");
-  const [user, setUser] = useState<{ username?: string; email?: string; contactNo?: string }>({});
+  const [user, setUser] = useState<{
+    username?: string;
+    email?: string;
+    contactNo?: string;
+  }>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [password, setPassword] = useState("");
   const [showContactModal, setShowContactModal] = useState(false);
-const [contactNo, setContactNo] = useState(user.contactNo || "");
+  const [isEditingUsername, setIsEditingUsername] = useState(false);
+  const [newUsername, setNewUsername] = useState("");
+  const [contactNo, setContactNo] = useState(user.contactNo || "");
 
-const handleSaveContact = async () => {
-  try {
-    const res = await fetch(`${backendUrl}/update-contact`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ contactNo }),
-    });
+  const handleSaveContact = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/update-contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ contactNo }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      alert("Contact info updated successfully!");
-      setUser((prev) => ({ ...prev, contactNo }));
-      setShowContactModal(false);
-    } else {
-      alert(data.message || "Failed to update contact info");
+      if (res.ok) {
+        alert("Contact info updated successfully!");
+        setUser((prev) => ({ ...prev, contactNo }));
+        setShowContactModal(false);
+      } else {
+        alert(data.message || "Failed to update contact info");
+      }
+    } catch (err) {
+      console.error("Error updating contact:", err);
+      alert("Server error");
     }
-  } catch (err) {
-    console.error("Error updating contact:", err);
-    alert("Server error");
-  }
-};
-
+  };
 
   const handleDeleteAccount = async () => {
     if (!password) {
@@ -88,7 +93,29 @@ const handleSaveContact = async () => {
     fetchUser();
   }, [backendUrl]);
 
+  const handleUpdateUsername = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/update-username`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: newUsername }),
+      });
 
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Username updated successfully!");
+        setUser((prev) => ({ ...prev, username: newUsername }));
+        setIsEditingUsername(false);
+      } else {
+        alert(data.message || "Failed to update username");
+      }
+    } catch (err) {
+      console.error("Error updating username:", err);
+      alert("Server error");
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -141,62 +168,119 @@ const handleSaveContact = async () => {
 
             <div className="account-settings">
               <p>Username</p>
-              <input
-                type="text"
-                value={user.username || "Loading..."}
-                readOnly
-              />
-              <a href="#" className="action-link">
-                Change username
-              </a>
+              {isEditingUsername ? (
+                <>
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => setNewUsername(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="edit-actions">
+                    <a
+                      href="#"
+                      className="action-link"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateUsername();
+                      }}
+                    >
+                      Save
+                    </a>
+                    <a
+                      href="#"
+                      className="action-link cancel"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setIsEditingUsername(false);
+                      }}
+                    >
+                      Cancel
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <input
+                    type="text"
+                    value={user.username || "Loading..."}
+                    readOnly
+                  />
+                  <a
+                    href="#"
+                    className="action-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setNewUsername(user.username || "");
+                      setIsEditingUsername(true);
+                    }}
+                  >
+                    Change username
+                  </a>
+                </>
+              )}
 
               <p>Email</p>
               <input type="email" value={user.email || "Loading..."} readOnly />
 
               <span className="grid-placeholder"></span>
-             <p>Contact No:</p>
-<div className="date-input-container">
-  <input type="tel" value={user.contactNo || "No data yet"} readOnly />
-  <span className="info-icon" title="Add or update contact information">
-    <a
-      href="#"
-      className="action-link"
-      onClick={(e) => {
-        e.preventDefault();
-        setShowContactModal(true);
-        setContactNo(user.contactNo || "");
-      }}
-    >
-      {user.contactNo ? "Update contact info" : "Add contact info"}
-    </a>
-  </span>
-  {showContactModal && (
-  <div className="modal-overlay">
-    <div className="modal">
-      <h3>{user.contactNo ? "Update Contact Info" : "Add Contact Info"}</h3>
-      <input
-        type="tel"
-        placeholder="Enter mobile number"
-        value={contactNo}
-        onChange={(e) => setContactNo(e.target.value)}
-      />
-      <div className="modal-buttons">
-        <button className="submit-button" onClick={handleSaveContact}>
-          Save
-        </button>
-        <button
-          className="submit-button cancel"
-          onClick={() => setShowContactModal(false)}
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-</div>
-
+              <p>Contact No:</p>
+              <div className="date-input-container">
+                <input
+                  type="tel"
+                  value={user.contactNo || "No data yet"}
+                  readOnly
+                />
+                <span
+                  className="info-icon"
+                  title="Add or update contact information"
+                >
+                  <a
+                    href="#"
+                    className="action-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowContactModal(true);
+                      setContactNo(user.contactNo || "");
+                    }}
+                  >
+                    {user.contactNo
+                      ? "Update contact info"
+                      : "Add contact info"}
+                  </a>
+                </span>
+                {showContactModal && (
+                  <div className="modal-overlay">
+                    <div className="modal">
+                      <h3>
+                        {user.contactNo
+                          ? "Update Contact Info"
+                          : "Add Contact Info"}
+                      </h3>
+                      <input
+                        type="tel"
+                        placeholder="Enter mobile number"
+                        value={contactNo}
+                        onChange={(e) => setContactNo(e.target.value)}
+                      />
+                      <div className="modal-buttons">
+                        <button
+                          className="submit-button"
+                          onClick={handleSaveContact}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="submit-button cancel"
+                          onClick={() => setShowContactModal(false)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <span className="grid-placeholder"></span>
 

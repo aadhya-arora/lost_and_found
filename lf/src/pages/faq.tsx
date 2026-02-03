@@ -2,6 +2,7 @@ import { useState } from "react";
 import faq from "../assets/faq.png";
 import "../styling/faq.css";
 import Footer from "../components/footer";
+import { useNavigate } from "react-router-dom";
 
 interface Question {
   question: string;
@@ -14,6 +15,7 @@ interface Category {
 }
 
 const Faq = () => {
+  const navigate = useNavigate();
   const [activeCategoryIndex, setActiveCategoryIndex] = useState<number>(0);
   const [activeQuestionIndex, setActiveQuestionIndex] = useState<number | null>(
     null
@@ -191,7 +193,7 @@ const Faq = () => {
 
   const handleCategoryClick = (index: number) => {
     setActiveCategoryIndex(index);
-    setActiveQuestionIndex(null); // Reset opened question when switching category
+    setActiveQuestionIndex(null);
   };
 
   const toggleQuestion = (index: number) => {
@@ -212,7 +214,10 @@ const Faq = () => {
               searching for something important, or learning how the platform
               works, this section will help you navigate with confidence.
             </p>
-            <button className="ask-btn">
+           <button 
+              className="ask-btn" 
+              onClick={() => navigate("/contact")}
+            >
               Ask Your Own Questions <span className="arrow">→</span>{" "}
             </button>
           </div>
