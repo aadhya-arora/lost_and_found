@@ -10,14 +10,15 @@ import Footer from "../components/footer";
 const Home = () => {
   const [showMoreFAQs, setShowMoreFAQs] = useState(false);
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const [lostRes, foundRes] = await Promise.all([
-          fetch("http://localhost:5000/lost"),
-          fetch("http://localhost:5000/found"),
-        ]);
+       const [lostRes, foundRes] = await Promise.all([
+        fetch(`${backendUrl}/lost`),
+        fetch(`${backendUrl}/found`),
+      ]);
 
         const lostData = await lostRes.json();
         const foundData = await foundRes.json();
@@ -45,7 +46,7 @@ const Home = () => {
     };
 
     fetchPosts();
-  }, []);
+  }, [backendUrl]);
   const navigate = useNavigate();
 
   return (
