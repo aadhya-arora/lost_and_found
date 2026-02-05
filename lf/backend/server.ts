@@ -427,7 +427,44 @@ app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
-// Add this to aadhya-arora/lost_and_found/.../lf/backend/server.ts
+
+app.post("/api/contact", async (req: Request, res: Response) => {
+  try {
+    const { name, email, message } = req.body ?? {};
+
+    if (!name || !message) {
+      return res.status(400).json({ message: "Name and message are required." });
+    }
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail || !process.env.SENDGRID_API_KEY) {
+      return res.status(500).json({ message: "Email service not configured on server." });
+    }
+
+    const safeName = sanitize(name.trim());
+    const safeMessage = sanitize(message.trim());
+    const safeEmail = email?.trim() || "No email provided";
+
+    const msg = {
+      to: adminEmail,
+      from: process.env.SENDGRID_FROM || adminEmail,
+      subject: `New Contact Form Submission from ${safeName}`,
+      text: `Name: ${safeName}\nEmail: ${safeEmail}\n\nMessage:\n${safeMessage}`,
+      html: `
+        <p><strong>Name:</strong> ${safeName}</p>
+        <p><strong>Email:</strong> ${safeEmail}</p>
+        <p><strong>Message:</strong></p>
+        <p>${safeMessage}</p>
+      `,
+    };
+
+    await sgMail.send(msg);
+    res.status(200).json({ message: "Thanks, your query has been sent!" });
+  } catch (err: any) {
+    console.error("Contact form error:", err);
+    res.status(500).json({ message: "Failed to send your message. Please try again." });
+  }
+});
 
 app.post("/update-contact", authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
