@@ -427,6 +427,35 @@ app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Re
   }
 });
 
+app.post("/api/footer-question", footerLimiter as unknown as RequestHandler, async (req: Request, res: Response) => {
+  try {
+    const { email, question } = req.body ?? {};
+
+    if (!question?.trim()) {
+      return res.status(400).json({ message: "Question is required." });
+    }
+    
+    if (!process.env.SENDGRID_API_KEY || !process.env.ADMIN_EMAIL) {
+      console.error("Missing SendGrid Configuration");
+      return res.status(500).json({ message: "Email provider not configured." });
+    }
+
+    const msg = {
+      to: process.env.ADMIN_EMAIL,
+      from: process.env.SENDGRID_FROM || process.env.ADMIN_EMAIL,
+      subject: `Footer Query from ${email || "Anonymous"}`,
+      text: question.trim(),
+      html: `<p><strong>From:</strong> ${email || "Not provided"}</p><p><strong>Question:</strong> ${question}</p>`,
+    };
+
+    await sgMail.send(msg);
+    res.json({ message: "Message sent successfully!" });
+  } catch (err: any) {
+    console.error("Footer email error:", err.response?.body || err);
+    res.status(500).json({ message: "Failed to send email." });
+  }
+});
+
 app.post("/api/contact", async (req: Request, res: Response) => {
   try {
     const { name, email, message } = req.body ?? {};
@@ -435,10 +464,6 @@ app.post("/api/contact", async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Name and message are required." });
     }
 
-    // Log to console so you can see messages even if email fails
-    console.log(`[Contact Form] From: ${name} <${email}>, Message: ${message}`);
-
-    // Only attempt to send email if SendGrid is configured
     if (process.env.SENDGRID_API_KEY && process.env.ADMIN_EMAIL) {
       const msg = {
         to: process.env.ADMIN_EMAIL,
@@ -448,11 +473,12 @@ app.post("/api/contact", async (req: Request, res: Response) => {
         html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong> ${message}</p>`,
       };
       await sgMail.send(msg);
+      res.status(200).json({ message: "Thanks, your query has been sent!" });
+    } else {
+      throw new Error("SendGrid not configured");
     }
-
-    res.status(200).json({ message: "Thanks, your query has been sent!" });
   } catch (err: any) {
-    console.error("Contact form error:", err);
+    console.error("Contact form error:", err.response?.body || err); // Log the specific SendGrid error
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 });
