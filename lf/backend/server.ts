@@ -429,30 +429,29 @@ app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Re
 
 app.post("/api/contact", async (req: Request, res: Response) => {
   try {
-    const { name, email, message } = req.body;
+    const { name, email, message } = req.body ?? {};
 
     if (!name || !message) {
       return res.status(400).json({ message: "Name and message are required." });
     }
 
-    console.log("New Contact Form Submission:", { name, email, message });
+    // Log to console so you can see messages even if email fails
+    console.log(`[Contact Form] From: ${name} <${email}>, Message: ${message}`);
 
-    // Check if SendGrid is configured
+    // Only attempt to send email if SendGrid is configured
     if (process.env.SENDGRID_API_KEY && process.env.ADMIN_EMAIL) {
       const msg = {
         to: process.env.ADMIN_EMAIL,
         from: process.env.SENDGRID_FROM || process.env.ADMIN_EMAIL,
-        subject: `Contact Form: ${name}`,
+        subject: `New Contact Form Submission from ${name}`,
         text: message,
-        html: `<p><strong>From:</strong> ${name} (${email})</p><p>${message}</p>`,
+        html: `<p><strong>Name:</strong> ${name}</p><p><strong>Email:</strong> ${email}</p><p><strong>Message:</strong> ${message}</p>`,
       };
       await sgMail.send(msg);
-    } else {
-      console.warn("SendGrid not configured. Message logged to console only.");
     }
 
     res.status(200).json({ message: "Thanks, your query has been sent!" });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Contact form error:", err);
     res.status(500).json({ message: "Server error. Please try again later." });
   }
