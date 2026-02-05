@@ -31,37 +31,107 @@ interface FoundItem {
   email: string;
 }
 
+// Reusable Modal Component
+const ItemModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  item,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  item: LostItem | FoundItem | null;
+}) => {
+  if (!isOpen || !item) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>{title}</h2>
+        <div className="modal-details">
+          <p><strong>Contact Details:</strong></p>
+          <p>📧 Email: {item.email}</p>
+          <p>📞 Phone: {item.phone}</p>
+          <hr />
+          <p>Would you like to mark this item as resolved and remove it from the list?</p>
+        </div>
+        <div className="modal-actions">
+          <button onClick={onConfirm} className="confirm-button">Yes, Resolve</button>
+          <button onClick={onClose} className="cancel-button">Close</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Found = () => {
   const [lostItems, setLostItems] = useState<LostItem[]>([]);
   const [foundItems, setFoundItems] = useState<FoundItem[]>([]);
+  
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<LostItem | FoundItem | null>(null);
+  const [isProcessingLost, setIsProcessingLost] = useState(false);
 
   useEffect(() => {
     fetchLostItems();
     fetchFoundItems();
   }, []);
 
-  // Use environment variables or a constant for your Render URL
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-const fetchLostItems = async () => {
-  try {
-    // Change from "http://localhost:5000/lost"
-    const response = await axios.get(`${backendUrl}/lost`); 
-    setLostItems(response.data);
-  } catch (error) {
-    console.error("Error fetching lost items:", error);
-  }
-};
+  const fetchLostItems = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/lost`);
+      setLostItems(response.data);
+    } catch (error) {
+      console.error("Error fetching lost items:", error);
+    }
+  };
 
-const fetchFoundItems = async () => {
-  try {
-    // Change from "http://localhost:5000/found"
-    const response = await axios.get(`${backendUrl}/found`);
-    setFoundItems(response.data);
-  } catch (error) {
-    console.error("Error fetching found items:", error);
-  }
-};
+  const fetchFoundItems = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/found`);
+      setFoundItems(response.data);
+    } catch (error) {
+      console.error("Error fetching found items:", error);
+    }
+  };
+
+  const handleClaimInitiate = (item: FoundItem) => {
+    setSelectedItem(item);
+    setIsProcessingLost(false);
+    setModalOpen(true);
+  };
+
+  const handleReportFoundInitiate = (item: LostItem) => {
+    setSelectedItem(item);
+    setIsProcessingLost(true);
+    setModalOpen(true);
+  };
+
+  const handleConfirmResolve = async () => {
+    if (!selectedItem) return;
+
+    const endpoint = isProcessingLost ? "lost" : "found";
+    try {
+      await axios.delete(`${backendUrl}/${endpoint}/${selectedItem._id}`, {
+        withCredentials: true,
+      });
+      
+      if (isProcessingLost) fetchLostItems();
+      else fetchFoundItems();
+      
+      setModalOpen(false);
+      setSelectedItem(null);
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      alert("Error removing the item from server.");
+    }
+  };
 
   const groupItemsByCategory = (items: (LostItem | FoundItem)[]) => {
     return items.reduce((acc, item) => {
@@ -72,56 +142,6 @@ const fetchFoundItems = async () => {
       acc[category].push(item);
       return acc;
     }, {} as Record<string, (LostItem | FoundItem)[]>);
-  };
-
-  const handleClaim = async (item: FoundItem) => {
-    // Step 1: Show contact info
-    alert(`Contact the person who found this item:
-  📧 Email: ${item.email}
-  📞 Phone: ${item.phone}`);
-
-    // Step 2: Ask for confirmation before deletion
-    const confirmDelete = window.confirm(
-      "Do you want to mark this item as found and remove it from the list?"
-    );
-    if (!confirmDelete) return;
-
-    // Step 3: Proceed with deletion if confirmed
-   try {
-      // Add withCredentials: true here
-      await axios.delete(`${backendUrl}/found/${item._id}`, {
-        withCredentials: true
-      });
-      fetchFoundItems(); 
-    } catch (error) {
-      console.error("Error deleting claimed item:", error);
-      alert("Error removing the claimed item from server.");
-    }
-  };
-
-  const handleReportFound = async (item: LostItem) => {
-    // Step 1: Show contact info
-    alert(`Contact the person who lost this item:
-  📧 Email: ${item.email}
-  📞 Phone: ${item.phone}`);
-
-    // Step 2: Ask for confirmation before deletion
-    const confirmDelete = window.confirm(
-      "Do you want to mark this lost item as found and remove it from the list?"
-    );
-    if (!confirmDelete) return;
-
-    // Step 3: Proceed with deletion if confirmed
-   try {
-      // Add withCredentials: true here
-      await axios.delete(`${backendUrl}/lost/${item._id}`, {
-        withCredentials: true
-      });
-      fetchLostItems(); 
-    } catch (error) {
-      console.error("Error deleting lost item:", error);
-      alert("Error removing the lost item from server.");
-    }
   };
 
   const groupedLostItems = groupItemsByCategory(lostItems);
@@ -150,18 +170,16 @@ const fetchFoundItems = async () => {
               key={item._id}
               className={`item-card ${isLost ? "lost-card" : "found-card"}`}
             >
-             {item.imageUrl && (
-  <img
-    // Add the backendUrl prefix here
-    src={item.imageUrl.startsWith('http') ? item.imageUrl : `${backendUrl}${item.imageUrl}`}
-    alt={item.name}
-    className="item-image"
-    // Optional: Add a fallback if the image fails to load
-    onError={(e) => {
-      e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image";
-    }}
-  />
-)}
+              {item.imageUrl && (
+                <img
+                  src={item.imageUrl.startsWith('http') ? item.imageUrl : `${backendUrl}${item.imageUrl}`}
+                  alt={item.name}
+                  className="item-image"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://via.placeholder.com/150?text=No+Image";
+                  }}
+                />
+              )}
               <div className="item-details">
                 <h3 className="item-name">{item.name}</h3>
                 <p>
@@ -182,21 +200,11 @@ const fetchFoundItems = async () => {
                     <strong>Location:</strong> {item.location}
                   </p>
                 )}
-                {item.brand && (
-                  <p>
-                    <strong>Brand:</strong> {item.brand}
-                  </p>
-                )}
-                {item.color && (
-                  <p>
-                    <strong>Color:</strong> {item.color}
-                  </p>
-                )}
                 <button
                   onClick={() =>
                     isLost
-                      ? handleReportFound(item as LostItem)
-                      : handleClaim(item as FoundItem)
+                      ? handleReportFoundInitiate(item as LostItem)
+                      : handleClaimInitiate(item as FoundItem)
                   }
                   className={`${
                     isLost ? "report-found-button" : "claim-button"
@@ -230,6 +238,14 @@ const fetchFoundItems = async () => {
           {renderItems(groupedFoundItems, false)}
         </div>
       </div>
+
+      <ItemModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onConfirm={handleConfirmResolve}
+        title={isProcessingLost ? "Help Return this Item" : "Claim Found Item"}
+        item={selectedItem}
+      />
     </div>
   );
 };
