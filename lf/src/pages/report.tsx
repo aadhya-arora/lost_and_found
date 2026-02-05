@@ -68,7 +68,6 @@ function LocationMarker<T extends { location: string }>({
           `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${e.latlng.lat}&lon=${e.latlng.lng}&zoom=18&addressdetails=1`
         );
 
-        
         const address = response.data.address;
         const detailedAddress = [
           address.building,
@@ -129,6 +128,35 @@ const initialFoundForm: FoundDataType = {
   email: "",
 };
 
+// Modal Component for Status Messages
+const StatusModal = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  isError,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  isError: boolean;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className={`modal-content ${isError ? "modal-error" : "modal-success"}`}>
+        <h2>{title}</h2>
+        <p>{message}</p>
+        <button onClick={onClose} className="submit-report-button">
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Report: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [selectedOption, setSelectedOption] = useState<"lost" | "found" | null>(
@@ -137,27 +165,35 @@ const Report: React.FC = () => {
 
   const [formData, setFormData] = useState<FormDataType>(initialLostForm);
   const [foundData, setFoundData] = useState<FoundDataType>(initialFoundForm);
+  const [modalConfig, setModalConfig] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    isError: false,
+  });
+
   const navigate = useNavigate();
 
-  // src/pages/report.tsx
-
-useEffect(() => {
-  const checkLoginStatus = async () => {
-    try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-      
-      // Changed from /user-status to /me
-      await axios.get(`${backendUrl}/me`, {
-        withCredentials: true,
-      });
-      // If request succeeds, user is logged in
-    } catch (err) {
-      alert("You must be logged in to report an item.");
-      navigate("/auth");
-    }
-  };
-  checkLoginStatus();
-}, [navigate]);
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const backendUrl =
+          import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+        await axios.get(`${backendUrl}/me`, {
+          withCredentials: true,
+        });
+      } catch (err) {
+        setModalConfig({
+          isOpen: true,
+          title: "Authentication Required",
+          message: "You must be logged in to report an item.",
+          isError: true,
+        });
+        setTimeout(() => navigate("/auth"), 2000);
+      }
+    };
+    checkLoginStatus();
+  }, [navigate]);
 
   useEffect(() => {
     const predictCategory = async () => {
@@ -214,6 +250,17 @@ useEffect(() => {
     } catch (err) {
       console.error("Error predicting category:", err);
       return "Accessories";
+    }
+  };
+
+  const closeModal = () => {
+    const wasError = modalConfig.isError;
+    setModalConfig({ ...modalConfig, isOpen: false });
+    if (!wasError) {
+      setFormData(initialLostForm);
+      setFoundData(initialFoundForm);
+      setStep(1);
+      setSelectedOption(null);
     }
   };
 
@@ -276,82 +323,103 @@ useEffect(() => {
   const handleNext = () => setStep((prev) => prev + 1);
   const handleBack = () => setStep((prev) => prev - 1);
 
-const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  try {
-    
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-    
-    let imageUrl = "";
-    if (formData.image) {
-      const imageData = new FormData();
-      imageData.append("file", formData.image);
-      imageData.append("upload_preset", "lost_and_found");
-      const cloudinaryResponse = await axios.post(
-        "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
-        imageData
+  const handleSubmitLost = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+      let imageUrl = "";
+      if (formData.image) {
+        const imageData = new FormData();
+        imageData.append("file", formData.image);
+        imageData.append("upload_preset", "lost_and_found");
+        const cloudinaryResponse = await axios.post(
+          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+          imageData
+        );
+        imageUrl = cloudinaryResponse.data.secure_url;
+      }
+
+      const itemData = { ...formData, imageUrl };
+
+      await axios.post(`${backendUrl}/lost`, itemData, {
+        withCredentials: true,
+      });
+
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Lost item report submitted successfully!",
+        isError: false,
+      });
+    } catch (error: any) {
+      console.error(
+        "Error submitting lost report:",
+        error.response?.data || error.message
       );
-      imageUrl = cloudinaryResponse.data.secure_url;
+
+      if (error.response?.status === 401) {
+        setModalConfig({
+          isOpen: true,
+          title: "Session Expired",
+          message: "Your session has expired. Please log in again.",
+          isError: true,
+        });
+        setTimeout(() => navigate("/auth"), 2000);
+      } else {
+        setModalConfig({
+          isOpen: true,
+          title: "Error",
+          message: error.response?.data?.error || "Internal Server Error",
+          isError: true,
+        });
+      }
     }
+  };
 
-    const itemData = { ...formData, imageUrl };
+  const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const backendUrl =
+        import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
-    await axios.post(`${backendUrl}/lost`, itemData, {
-      withCredentials: true,
-    });
+      let imageUrl = "";
+      if (foundData.image) {
+        const imageData = new FormData();
+        imageData.append("file", foundData.image);
+        imageData.append("upload_preset", "lost_and_found");
 
-    alert("Lost item report submitted successfully!");
+        const cloudinaryResponse = await axios.post(
+          "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
+          imageData
+        );
 
-    setFormData(initialLostForm);
-    setStep(1);
-    setSelectedOption(null);
-  } catch (error: any) {
-    console.error("Error submitting lost report:", error.response?.data || error.message);
-    
-    if (error.response?.status === 401) {
-      alert("Your session has expired. Please log in again.");
-      navigate("/auth");
-    } else {
-      alert(`Error: ${error.response?.data?.error || "Internal Server Error"}`);
+        imageUrl = cloudinaryResponse.data.secure_url;
+      }
+
+      const itemData = { ...foundData, imageUrl };
+
+      await axios.post(`${backendUrl}/found`, itemData, {
+        withCredentials: true,
+      });
+
+      setModalConfig({
+        isOpen: true,
+        title: "Success",
+        message: "Found item report submitted successfully!",
+        isError: false,
+      });
+    } catch (error: any) {
+      console.error("Error submitting found report:", error);
+      setModalConfig({
+        isOpen: true,
+        title: "Error",
+        message: error.response?.data?.error || "Internal Server Error",
+        isError: true,
+      });
     }
-  }
-};
- 
-const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  try {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-    
-    let imageUrl = "";
-    if (foundData.image) {
-      const imageData = new FormData();
-      imageData.append("file", foundData.image);
-      imageData.append("upload_preset", "lost_and_found");
-      
-     
-      const cloudinaryResponse = await axios.post(
-        "https://api.cloudinary.com/v1_1/dopenczbp/image/upload",
-        imageData
-      );
-    
-      imageUrl = cloudinaryResponse.data.secure_url;
-    }
-
-   
-    const itemData = { ...foundData, imageUrl };
-
-    await axios.post(`${backendUrl}/found`, itemData, {
-      withCredentials: true,
-    });
-
-    alert("Found item report submitted successfully!");
-    setFoundData(initialFoundForm);
-    setStep(1);
-    setSelectedOption(null);
-  } catch (error) {
-    console.error("Error submitting found report:", error);
-  }
-};
+  };
 
   return (
     <div>
@@ -840,6 +908,14 @@ const handleSubmitFound = async (e: React.FormEvent<HTMLFormElement>) => {
           </div>
         </div>
       )}
+
+      <StatusModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        isError={modalConfig.isError}
+      />
 
       <Footer />
     </div>
