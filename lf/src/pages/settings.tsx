@@ -135,7 +135,14 @@ const Settings: React.FC = () => {
     }
   };
 
-  if (loading) return <p className="loading-text">Loading user info...</p>;
+ if (loading) {
+  return (
+    <div className="settings-loading-container">
+      <div className="settings-spinner"></div>
+      <p>Loading your profile...</p>
+    </div>
+  );
+}
 
   return (
     <div className="settings-page">

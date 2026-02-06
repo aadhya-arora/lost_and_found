@@ -370,7 +370,30 @@
   background-color: #d2d9e5;
 }
 
-/* Soft pop animation */
+.settings-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-family: "Figtree", sans-serif;
+  color: #555;
+}
+
+.settings-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(79, 119, 45, 0.1);
+  border-left-color: #4f772d;
+  border-radius: 50%;
+  animation: settings-spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes settings-spin {
+  to { transform: rotate(360deg); }
+}
+
 @keyframes modalPop {
   from {
     opacity: 0;
