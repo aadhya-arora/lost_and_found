@@ -19,8 +19,7 @@ const Footer: React.FC<Props> = () => {
     (import.meta.env.VITE_BACKEND_URL as string) || "http://localhost:5000";
 
   const validateEmail = (value: string) => {
-    if (!value) return true; // optional
-    // simple email check
+    if (!value) return true; 
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
@@ -60,7 +59,6 @@ const Footer: React.FC<Props> = () => {
       setStatusMsg("Server error while sending your question.");
     } finally {
       setSending(false);
-      // clear status message after a short while (optional)
       setTimeout(() => setStatusMsg(null), 8000);
     }
   };

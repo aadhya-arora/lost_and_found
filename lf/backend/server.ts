@@ -57,6 +57,7 @@ if (!jwtSecret) {
 }
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`Incoming request: ${req.method} ${req.url}`);
@@ -430,29 +431,28 @@ app.post("/update-username", authenticateToken, async (req: AuthRequest, res: Re
 app.post("/api/footer-question", footerLimiter as unknown as RequestHandler, async (req: Request, res: Response) => {
   try {
     const { email, question } = req.body ?? {};
-
     if (!question?.trim()) {
       return res.status(400).json({ message: "Question is required." });
     }
-    
-    if (!process.env.SENDGRID_API_KEY || !process.env.ADMIN_EMAIL) {
-      console.error("Missing SendGrid Configuration");
-      return res.status(500).json({ message: "Email provider not configured." });
-    }
 
     const msg = {
-      to: process.env.ADMIN_EMAIL,
-      from: process.env.SENDGRID_FROM || process.env.ADMIN_EMAIL,
-      subject: `Footer Query from ${email || "Anonymous"}`,
+      to: process.env.ADMIN_EMAIL!,
+      from: process.env.SENDGRID_FROM!,
+      subject: `Website query from ${email || "Anonymous"}`,
       text: question.trim(),
       html: `<p><strong>From:</strong> ${email || "Not provided"}</p><p><strong>Question:</strong> ${question}</p>`,
     };
 
     await sgMail.send(msg);
-    res.json({ message: "Message sent successfully!" });
+    res.json({ message: "Message sent" });
   } catch (err: any) {
-    console.error("Footer email error:", err.response?.body || err);
-    res.status(500).json({ message: "Failed to send email." });
+    if (err.response) {
+      console.error("SendGrid Details:", JSON.stringify(err.response.body, null, 2));
+    } else {
+      console.error("Footer email error:", err);
+    }
+    
+    res.status(500).json({ message: "Failed to send email" });
   }
 });
 
