@@ -2,6 +2,22 @@ import React, { useState, useEffect } from "react";
 import "../styling/settings.css";
 import GoogleTranslateWidget from "./GoogleTranslateWidget";
 
+// Reusable Success Modal Component for a professional UI
+const SuccessModal = ({ isOpen, onClose, message }: { isOpen: boolean, onClose: () => void, message: string }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal success-modal">
+        <div className="success-icon">✔</div>
+        <h3>Success!</h3>
+        <p>{message}</p>
+        <button className="submit-button" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+};
+
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Account");
   const [user, setUser] = useState<{
@@ -15,6 +31,18 @@ const Settings: React.FC = () => {
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [newUsername, setNewUsername] = useState("");
   const [contactNo, setContactNo] = useState(user.contactNo || "");
+  
+  // State for the professional success modal
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+
+  // Helper to trigger the success modal
+  const triggerSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setShowSuccessModal(true);
+  };
 
   const handleSaveContact = async () => {
     try {
@@ -28,14 +56,40 @@ const Settings: React.FC = () => {
       const data = await res.json();
 
       if (res.ok) {
-        alert("Contact info updated successfully!");
         setUser((prev) => ({ ...prev, contactNo }));
         setShowContactModal(false);
+        // Trigger professional modal for contact update
+        triggerSuccess("Your contact information has been updated successfully.");
       } else {
         alert(data.message || "Failed to update contact info");
       }
     } catch (err) {
       console.error("Error updating contact:", err);
+      alert("Server error");
+    }
+  };
+
+  const handleUpdateUsername = async () => {
+    try {
+      const res = await fetch(`${backendUrl}/update-username`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ username: newUsername }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setUser((prev) => ({ ...prev, username: newUsername }));
+        setIsEditingUsername(false);
+        // Trigger professional modal for username update
+        triggerSuccess("Your username has been updated successfully.");
+      } else {
+        alert(data.message || "Failed to update username");
+      }
+    } catch (err) {
+      console.error("Error updating username:", err);
       alert("Server error");
     }
   };
@@ -68,9 +122,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  const backendUrl =
-    import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -93,30 +144,6 @@ const Settings: React.FC = () => {
     fetchUser();
   }, [backendUrl]);
 
-  const handleUpdateUsername = async () => {
-    try {
-      const res = await fetch(`${backendUrl}/update-username`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ username: newUsername }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert("Username updated successfully!");
-        setUser((prev) => ({ ...prev, username: newUsername }));
-        setIsEditingUsername(false);
-      } else {
-        alert(data.message || "Failed to update username");
-      }
-    } catch (err) {
-      console.error("Error updating username:", err);
-      alert("Server error");
-    }
-  };
-
   const handleLogout = async () => {
     try {
       const res = await fetch(`${backendUrl}/logout`, {
@@ -135,43 +162,40 @@ const Settings: React.FC = () => {
     }
   };
 
- if (loading) {
-  return (
-    <div className="settings-loading-container">
-      <div className="settings-spinner"></div>
-      <p>Loading your profile...</p>
-    </div>
-  );
-}
+  if (loading) {
+    return (
+      <div className="settings-loading-container">
+        <div className="settings-spinner"></div>
+        <p>Loading your profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="settings-page">
+      {/* Professional Success Modal */}
+      <SuccessModal 
+        isOpen={showSuccessModal} 
+        onClose={() => setShowSuccessModal(false)} 
+        message={successMessage} 
+      />
+
       <div className="settings-options">
-        <a
-          className={activeTab === "Account" ? "active" : ""}
-          onClick={() => setActiveTab("Account")}
-        >
+        <a className={activeTab === "Account" ? "active" : ""} onClick={() => setActiveTab("Account")}>
           Account
         </a>
-        <a
-          className={activeTab === "Preferences" ? "active" : ""}
-          onClick={() => setActiveTab("Preferences")}
-        >
+        <a className={activeTab === "Preferences" ? "active" : ""} onClick={() => setActiveTab("Preferences")}>
           Preferences
         </a>
-        <a
-          className={activeTab === "Delete" ? "active" : ""}
-          onClick={() => setActiveTab("Delete")}
-        >
+        <a className={activeTab === "Delete" ? "active" : ""} onClick={() => setActiveTab("Delete")}>
           Delete Account
         </a>
       </div>
+
       <div className="settings-content">
         {activeTab === "Account" && (
           <div className="accounts-tab">
-            <p className="account-settings-p">
-              Change your account information
-            </p>
+            <p className="account-settings-p">Change your account information</p>
 
             <div className="account-settings">
               <p>Username</p>
@@ -208,11 +232,7 @@ const Settings: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <input
-                    type="text"
-                    value={user.username || "Loading..."}
-                    readOnly
-                  />
+                  <input type="text" value={user.username || "Loading..."} readOnly />
                   <a
                     href="#"
                     className="action-link"
@@ -233,15 +253,8 @@ const Settings: React.FC = () => {
               <span className="grid-placeholder"></span>
               <p>Contact No:</p>
               <div className="date-input-container">
-                <input
-                  type="tel"
-                  value={user.contactNo || "No data yet"}
-                  readOnly
-                />
-                <span
-                  className="info-icon"
-                  title="Add or update contact information"
-                >
+                <input type="tel" value={user.contactNo || "No data yet"} readOnly />
+                <span className="info-icon" title="Add or update contact information">
                   <a
                     href="#"
                     className="action-link"
@@ -251,19 +264,13 @@ const Settings: React.FC = () => {
                       setContactNo(user.contactNo || "");
                     }}
                   >
-                    {user.contactNo
-                      ? "Update contact info"
-                      : "Add contact info"}
+                    {user.contactNo ? "Update contact info" : "Add contact info"}
                   </a>
                 </span>
                 {showContactModal && (
                   <div className="modal-overlay">
                     <div className="modal">
-                      <h3>
-                        {user.contactNo
-                          ? "Update Contact Info"
-                          : "Add Contact Info"}
-                      </h3>
+                      <h3>{user.contactNo ? "Update Contact Info" : "Add Contact Info"}</h3>
                       <input
                         type="tel"
                         placeholder="Enter mobile number"
@@ -271,10 +278,7 @@ const Settings: React.FC = () => {
                         onChange={(e) => setContactNo(e.target.value)}
                       />
                       <div className="modal-buttons">
-                        <button
-                          className="submit-button"
-                          onClick={handleSaveContact}
-                        >
+                        <button className="submit-button" onClick={handleSaveContact}>
                           Save
                         </button>
                         <button
@@ -290,12 +294,7 @@ const Settings: React.FC = () => {
               </div>
 
               <span className="grid-placeholder"></span>
-
-              <button
-                type="button"
-                className="submit-button"
-                onClick={handleLogout}
-              >
+              <button type="button" className="submit-button" onClick={handleLogout}>
                 Logout
               </button>
             </div>
@@ -308,9 +307,7 @@ const Settings: React.FC = () => {
             <div className="preference-settings">
               <p>Language</p>
               <GoogleTranslateWidget />
-
               <span className="grid-placeholder"></span>
-
               <p>Time Zone</p>
               <select defaultValue="Asia/Kolkata">
                 <option value="UTC-12">UTC-12:00 (Baker Island)</option>
@@ -320,9 +317,7 @@ const Settings: React.FC = () => {
                 <option value="Asia/Tokyo">UTC+09:00 (Tokyo)</option>
                 <option value="Australia/Sydney">UTC+10:00 (Sydney)</option>
               </select>
-
               <span className="grid-placeholder"></span>
-
               <p>Email Notifications</p>
               <div className="toggle-switch-container">
                 <input
@@ -332,13 +327,9 @@ const Settings: React.FC = () => {
                   disabled
                   className="toggle-checkbox"
                 />
-                <label
-                  htmlFor="emailNotifications"
-                  className="toggle-label disabled"
-                ></label>
+                <label htmlFor="emailNotifications" className="toggle-label disabled"></label>
                 <span className="toggle-text">Off</span>
               </div>
-
               <button type="submit" className="submit-button">
                 Save Preferences
               </button>
@@ -348,31 +339,21 @@ const Settings: React.FC = () => {
 
         {activeTab === "Delete" && (
           <div className="delete-tab">
-            <p className="account-settings-p">
-              Delete your account permanently
-            </p>
+            <p className="account-settings-p">Delete your account permanently</p>
             <div className="delete-settings">
               <p>We're sorry to see you go. This action is irreversible.</p>
               <p>Please confirm your password to proceed:</p>
-
               <input
                 type="password"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-
               <div className="delete-buttons">
-                <button
-                  className="submit-button danger"
-                  onClick={handleDeleteAccount}
-                >
+                <button className="submit-button danger" onClick={handleDeleteAccount}>
                   Delete My Account
                 </button>
-                <button
-                  className="submit-button cancel"
-                  onClick={() => setPassword("")}
-                >
+                <button className="submit-button cancel" onClick={() => setPassword("")}>
                   Cancel
                 </button>
               </div>
