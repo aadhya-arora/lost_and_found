@@ -22,7 +22,7 @@ const Auth = () => {
     password: "",
   });
 
-  // State to manage the loading status and modal messages
+  // State to manage the loading status and modal messages for both success and errors
   const [status, setStatus] = useState<{ loading: boolean; message: string | null; success: boolean }>({
     loading: false,
     message: null,
@@ -39,7 +39,7 @@ const Auth = () => {
 
   const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setStatus({ loading: true, message: "Creating account...", success: false });
+    setStatus({ loading: true, message: "Creating your account...", success: false });
     try {
       const res = await fetch(`${backendUrl}/signUp`, {
         method: "POST",
@@ -54,21 +54,21 @@ const Auth = () => {
           window.location.href = "/";
         }, 1500);
       } else {
+        // Error displayed in modal instead of alert
         setStatus({
           loading: false,
-          message: "Signup failed: " + (data.error || "Unknown error"),
+          message: "Signup failed: " + (data.error || "Please check your details."),
           success: false,
         });
       }
     } catch (err) {
       console.error("Signup error:", err);
-      setStatus({ loading: false, message: "Server error during signup", success: false });
+      setStatus({ loading: false, message: "Server error. Please try again later.", success: false });
     }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Show the "Logging in..." modal
     setStatus({ loading: true, message: "Logging in...", success: false });
     try {
       const res = await fetch(`${backendUrl}/login`, {
@@ -79,30 +79,30 @@ const Auth = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        // Show the "Login successful!" modal
         setStatus({ loading: false, message: "Login successful!", success: true });
         setTimeout(() => {
           window.location.href = "/";
         }, 1500);
       } else {
+        // Error displayed in modal instead of alert
         setStatus({
           loading: false,
-          message: "Login failed: " + (data.error || data.message || "Unknown error"),
+          message: "Login failed: " + (data.error || data.message || "Invalid credentials."),
           success: false,
         });
       }
     } catch (err) {
       console.error("Login error:", err);
-      setStatus({ loading: false, message: "Server error during login", success: false });
+      setStatus({ loading: false, message: "Server error. Please try again later.", success: false });
     }
   };
 
   return (
     <div className="auth-body">
-      {/* Status Modal Overlay for Loading and Success Messages */}
+      {/* Status Modal Overlay: Handles Loading, Success, and Error messages */}
       {(status.loading || status.message) && (
         <div className="status-modal-overlay">
-          <div className={`status-modal-box ${status.success ? "success" : ""}`}>
+          <div className={`status-modal-box ${status.success ? "success" : status.message && !status.loading ? "error" : ""}`}>
             {status.loading && <div className="spinner"></div>}
             <p>{status.message}</p>
             {!status.loading && !status.success && (
