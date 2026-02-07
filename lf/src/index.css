@@ -3,4 +3,6 @@ body {
   margin: 0;
   padding: 0;
   background: linear-gradient(135deg, #f4fab1, #ffffff 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
 }
