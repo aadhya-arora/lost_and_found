@@ -22,6 +22,13 @@ const Auth = () => {
     password: "",
   });
 
+  // State to manage the loading status and modal messages
+  const [status, setStatus] = useState<{ loading: boolean; message: string | null; success: boolean }>({
+    loading: false,
+    message: null,
+    success: false,
+  });
+
   const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
 
   const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -32,6 +39,7 @@ const Auth = () => {
 
   const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setStatus({ loading: true, message: "Creating account...", success: false });
     try {
       const res = await fetch(`${backendUrl}/signUp`, {
         method: "POST",
@@ -41,19 +49,27 @@ const Auth = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Signup successful!");
-        window.location.href = "/";
+        setStatus({ loading: false, message: "Signup successful!", success: true });
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
       } else {
-        alert("Signup failed: " + (data.error || "Unknown error"));
+        setStatus({
+          loading: false,
+          message: "Signup failed: " + (data.error || "Unknown error"),
+          success: false,
+        });
       }
     } catch (err) {
       console.error("Signup error:", err);
-      alert("Server error during signup");
+      setStatus({ loading: false, message: "Server error during signup", success: false });
     }
   };
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    // Show the "Logging in..." modal
+    setStatus({ loading: true, message: "Logging in...", success: false });
     try {
       const res = await fetch(`${backendUrl}/login`, {
         method: "POST",
@@ -63,19 +79,45 @@ const Auth = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        alert("Login successful!");
-        window.location.href = "/";
+        // Show the "Login successful!" modal
+        setStatus({ loading: false, message: "Login successful!", success: true });
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
       } else {
-        alert("Login failed: " + (data.error || data.message || "Unknown error"));
+        setStatus({
+          loading: false,
+          message: "Login failed: " + (data.error || data.message || "Unknown error"),
+          success: false,
+        });
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("Server error during login");
+      setStatus({ loading: false, message: "Server error during login", success: false });
     }
   };
 
   return (
     <div className="auth-body">
+      {/* Status Modal Overlay for Loading and Success Messages */}
+      {(status.loading || status.message) && (
+        <div className="status-modal-overlay">
+          <div className={`status-modal-box ${status.success ? "success" : ""}`}>
+            {status.loading && <div className="spinner"></div>}
+            <p>{status.message}</p>
+            {!status.loading && !status.success && (
+              <button
+                className="btn mt-2"
+                style={{ marginLeft: "0" }}
+                onClick={() => setStatus({ ...status, message: null })}
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="bubble-background">
         <span></span><span></span><span></span>
         <span></span><span></span><span></span>
@@ -100,7 +142,6 @@ const Auth = () => {
 
                 <div className="auth-card-3d-wrap">
                   <div className="auth-card-3d-wrapper">
-
                     {/* LOGIN FORM */}
                     <div className="auth-card-front">
                       <div className="auth-center-wrap">
@@ -116,6 +157,7 @@ const Auth = () => {
                                 autoComplete="off"
                                 value={loginData.email}
                                 onChange={handleLoginChange}
+                                required
                               />
                               <i className="input-icon uil uil-at"></i>
                             </div>
@@ -128,11 +170,12 @@ const Auth = () => {
                                 autoComplete="new-password"
                                 value={loginData.password}
                                 onChange={handleLoginChange}
+                                required
                               />
                               <i className="input-icon uil uil-lock-alt"></i>
                             </div>
-                            <button type="submit" className="btn mt-4">
-                              Submit
+                            <button type="submit" className="btn mt-4" disabled={status.loading}>
+                              {status.loading ? "Processing..." : "Submit"}
                             </button>
                             <p className="auth-footer-text">
                               <a href="#0" className="auth-link">
@@ -159,6 +202,7 @@ const Auth = () => {
                                 autoComplete="off"
                                 value={signUpData.username}
                                 onChange={handleSignupChange}
+                                required
                               />
                               <i className="input-icon uil uil-user"></i>
                             </div>
@@ -171,6 +215,7 @@ const Auth = () => {
                                 autoComplete="off"
                                 value={signUpData.email}
                                 onChange={handleSignupChange}
+                                required
                               />
                               <i className="input-icon uil uil-at"></i>
                             </div>
@@ -183,20 +228,19 @@ const Auth = () => {
                                 autoComplete="new-password"
                                 value={signUpData.password}
                                 onChange={handleSignupChange}
+                                required
                               />
                               <i className="input-icon uil uil-lock-alt"></i>
                             </div>
-                            <button type="submit" className="btn mt-4">
-                              Submit
+                            <button type="submit" className="btn mt-4" disabled={status.loading}>
+                              {status.loading ? "Processing..." : "Submit"}
                             </button>
                           </form>
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
